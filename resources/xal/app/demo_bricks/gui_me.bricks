@@ -1,0 +1,49 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<BricksDocument date="Fri Jan 29 17:02:54 CST 2016" version="1.0.0">
+    <RootBrick>
+        <ViewNode height="400" tag="JFrame" width="500">
+            <ViewProxy type="javax.swing.JFrame"/>
+            <BeanProperty name="title" value="Demobricks"/>
+            <ViewNode tag="Tabbed Pane">
+                <ViewProxy type="javax.swing.JTabbedPane"/>
+                <BeanProperty fontName="Dialog" name="font" size="20" style="1"/>
+                <ViewNode tag="List">
+                    <ViewProxy type="javax.swing.JList"/>
+                    <BeanProperty name="visible" value="false"/>
+                    <BeanProperty name="name" value="MagList"/>
+                </ViewNode>
+                <ViewNode tag="Function Graph Panel">
+                    <ViewProxy type="xal.extension.widgets.plot.FunctionGraphsJPanel"/>
+                    <BeanProperty name="opaque" value="true"/>
+                    <BeanProperty name="name" value="sinePlot"/>
+                </ViewNode>
+                <ViewNode tag="Function Graph Panel">
+                    <ViewProxy type="xal.extension.widgets.plot.FunctionGraphsJPanel"/>
+                    <BeanProperty height="1" name="preferredSize" width="1"/>
+                    <BeanProperty name="name" value="cosinePlot"/>
+                </ViewNode>
+            </ViewNode>
+        </ViewNode>
+        <ViewNode height="147" tag="JDialog" width="500">
+            <ViewProxy type="javax.swing.JDialog"/>
+            <ViewNode tag="Horizontal Box">
+                <ViewProxy type="javax.swing.Box_Horizontal"/>
+                <ViewNode tag="Label">
+                    <ViewProxy type="javax.swing.JLabel"/>
+                    <BeanProperty name="text" value="Hello World"/>
+                    <BeanProperty fontName="Dialog" name="font" size="50" style="1"/>
+                </ViewNode>
+                <ViewNode tag="Horizontal Glue">
+                    <ViewProxy type="javax.swing.Box_HorizontalGlue"/>
+                </ViewNode>
+                <ViewNode tag="Button">
+                    <ViewProxy type="javax.swing.JButton"/>
+                    <BeanProperty name="name" value="OkButton"/>
+                    <BeanProperty name="text" value="OK"/>
+                    <BeanProperty name="label" value="OK"/>
+                    <BeanProperty fontName="Dialog" name="font" size="25" style="1"/>
+                </ViewNode>
+            </ViewNode>
+        </ViewNode>
+    </RootBrick>
+</BricksDocument>

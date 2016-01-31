@@ -1,0 +1,65 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<BricksDocument date="Fri Jan 29 22:01:15 CST 2016" version="1.0.0">
+    <RootBrick>
+        <ViewNode height="325" tag="JFrame" width="500">
+            <ViewProxy type="javax.swing.JFrame"/>
+            <ViewNode tag="Tabbed Pane">
+                <ViewProxy type="javax.swing.JTabbedPane"/>
+                <ViewNode tag="Vertical Box">
+                    <ViewProxy type="javax.swing.Box_Vertical"/>
+                    <BeanProperty name="name" value="MagnetsList"/>
+                    <ViewNode tag="Scroll Pane">
+                        <ViewProxy type="javax.swing.JScrollPane"/>
+                        <ViewNode tag="List">
+                            <ViewProxy type="javax.swing.JList"/>
+                        </ViewNode>
+                    </ViewNode>
+                    <ViewNode tag="Horizontal Box">
+                        <ViewProxy type="javax.swing.Box_Horizontal"/>
+                        <ViewNode tag="Horizontal Glue">
+                            <ViewProxy type="javax.swing.Box_HorizontalGlue"/>
+                        </ViewNode>
+                        <ViewNode tag="StartButton">
+                            <ViewProxy type="javax.swing.JButton"/>
+                            <BeanProperty name="text" value="Start"/>
+                        </ViewNode>
+                        <ViewNode tag="RunButton">
+                            <ViewProxy type="javax.swing.JButton"/>
+                            <BeanProperty name="text" value="Run"/>
+                        </ViewNode>
+                    </ViewNode>
+                </ViewNode>
+                <ViewNode tag="SinePlot">
+                    <ViewProxy type="xal.extension.widgets.plot.FunctionGraphsJPanel"/>
+                    <BeanProperty name="name" value="SinePlot"/>
+                </ViewNode>
+            </ViewNode>
+        </ViewNode>
+        <ViewNode height="117" tag="JDialog" width="430">
+            <ViewProxy type="javax.swing.JDialog"/>
+            <BeanProperty name="alwaysOnTop" value="true"/>
+            <BeanProperty height="80" name="minimumSize" width="355"/>
+            <BeanProperty name="modal" value="false"/>
+            <ViewNode tag="Horizontal Box">
+                <ViewProxy type="javax.swing.Box_Horizontal"/>
+                <BorderNode tag="Etched Border">
+                    <BorderProxy type="javax.swing.border.EtchedBorder"/>
+                </BorderNode>
+                <ViewNode tag="Label">
+                    <ViewProxy type="javax.swing.JLabel"/>
+                    <BeanProperty name="text" value="Hello, World!"/>
+                    <BeanProperty alpha="255" blue="102" green="0" name="foreground" red="255"/>
+                    <BeanProperty fontName="Dialog" name="font" size="35" style="1"/>
+                </ViewNode>
+                <ViewNode tag="Horizontal Glue">
+                    <ViewProxy type="javax.swing.Box_HorizontalGlue"/>
+                </ViewNode>
+                <ViewNode tag="Button">
+                    <ViewProxy type="javax.swing.JButton"/>
+                    <BeanProperty name="text" value="OK"/>
+                    <BeanProperty fontName="Dialog" name="font" size="20" style="1"/>
+                </ViewNode>
+            </ViewNode>
+        </ViewNode>
+    </RootBrick>
+</BricksDocument>
