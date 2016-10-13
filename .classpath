@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="apps/emittanceanalysis/src"/>
+	<classpathentry kind="src" path="plugins/mysql/src"/>
+	<classpathentry kind="src" path="apps/myva2/src"/>
+	<classpathentry kind="src" path="apps/myva/src"/>
 	<classpathentry kind="src" path="test/xmltest/src"/>
 	<classpathentry kind="src" path="apps/demo_bricks/src"/>
 	<classpathentry kind="src" path="apps/fitalign/src"/>
@@ -107,6 +110,7 @@
 	<classpathentry kind="lib" path="apps/lossviewer/lib/jcommon.jar"/>
 	<classpathentry kind="lib" path="apps/lossviewer/lib/jfreechart.jar"/>
 	<classpathentry kind="lib" path="apps/pta/lib/cf-gui.jar"/>
-	<classpathentry kind="lib" path="E:/app/kritha/product/11.2.0/dbhome_1/jdbc/lib/ojdbc6.jar"/>
+	<classpathentry kind="lib" path="plugins/oracle/lib/ojdbc6.jar"/>
+	<classpathentry kind="lib" path="plugins/mysql/lib/mariadb-java-client-1.1.3.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

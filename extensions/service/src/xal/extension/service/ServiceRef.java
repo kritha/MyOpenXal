@@ -52,6 +52,7 @@ public class ServiceRef {
 	 * @return The name of the service provided.
 	 */
 	public String getServiceName() {
+		System.out.println(_serviceInfo.getPropertyString( SERVICE_KEY ));
 		return _serviceInfo.getPropertyString( SERVICE_KEY );
 	}
 	

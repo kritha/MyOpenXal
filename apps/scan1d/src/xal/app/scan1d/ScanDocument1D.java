@@ -773,7 +773,7 @@ public class ScanDocument1D extends AcceleratorDocument {
 		analysisController.setMessageTextField(messageTextLocal);
 		parameterPV_Controller.setMessageTextField(messageTextLocal);
 		if (globalFont == null) {
-			globalFont = new Font("Monospaced", Font.BOLD, 10);
+			globalFont = new Font("Monospaced", Font.BOLD, 15);//set from 10 t0 15 in 160222
 		}
 		fontSize_PrefPanel_Spinner.setValue(new Integer(globalFont.getSize()));
 		setFontForAll(globalFont);

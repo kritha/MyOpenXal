@@ -701,6 +701,7 @@ public class AcceleratorSeq extends AcceleratorNode implements DataListener {
 		if ( count < 2 )  return false;
 		
 		// test if each sequence can precede the one that follows
+		//通过判断sequence能否首尾相接来判断是否是环
 		AcceleratorSeq previousSequence = sequences.get( count - 1 );
 		for ( int index = 0 ; index < count ; index++ ) {
 			final AcceleratorSeq sequence = sequences.get( index );

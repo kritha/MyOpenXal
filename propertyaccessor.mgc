@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ClassDiagram>
+    <Class name="xal.smf.proxy.LiveRFDesignBatchPropertyAccessor"
+        x="376" y="733">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.smf.proxy.BatchChannelPropertyAccessor"/>
+        <Communication destinationClassName="xal.smf.proxy.PropertyAccessor"/>
+    </Class>
+    <Class name="xal.smf.proxy.AbstractPropertyAccessor" x="646" y="140">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.smf.proxy.PropertyAccessor"/>
+    </Class>
+    <Class name="xal.smf.proxy.RfGapPropertyAccessor" x="328" y="199">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.smf.proxy.AbstractPropertyAccessor"/>
+        <Communication destinationClassName="xal.smf.proxy.AbstractPropertyAccessor"/>
+    </Class>
+    <Class name="xal.smf.proxy.ElectromagnetPropertyAccessor" x="947" y="163">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.smf.proxy.AbstractPropertyAccessor"/>
+        <Communication destinationClassName="xal.smf.proxy.AbstractPropertyAccessor"/>
+    </Class>
+    <Class name="xal.smf.proxy.PermanentMagnetPropertyAccessor" x="903" y="55">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.smf.proxy.AbstractPropertyAccessor"/>
+        <Communication destinationClassName="xal.smf.proxy.AbstractPropertyAccessor"/>
+    </Class>
+    <Class name="xal.smf.proxy.LiveBatchPropertyAccessor" x="716" y="728">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.smf.proxy.BatchChannelPropertyAccessor"/>
+        <Communication destinationClassName="xal.smf.proxy.PropertyAccessor"/>
+    </Class>
+    <Class name="xal.smf.proxy.RfCavityPropertyAccessor" x="418" y="52">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.smf.proxy.AbstractPropertyAccessor"/>
+        <Communication destinationClassName="xal.smf.proxy.AbstractPropertyAccessor"/>
+    </Class>
+    <Class name="xal.smf.proxy.BatchPropertyAccessor" x="664" y="372">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Association
+            destinationClassName="xal.smf.proxy.PropertyAccessor"
+            endpointName="NODE_ACCESSORS" kind="Simple"/>
+        <Communication destinationClassName="xal.smf.proxy.PropertyAccessor"/>
+    </Class>
+    <Class name="xal.smf.proxy.PropertyAccessor" x="826" y="249">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+    </Class>
+    <Class name="xal.smf.proxy.DesignBatchPropertyAccessor" x="911" y="575">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.smf.proxy.BatchPropertyAccessor"/>
+        <Communication destinationClassName="xal.smf.proxy.BatchPropertyAccessor"/>
+        <Communication destinationClassName="xal.smf.proxy.PropertyAccessor"/>
+    </Class>
+    <Class name="xal.smf.proxy.PrimaryPropertyAccessor" x="29" y="362">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Association
+            destinationClassName="xal.smf.proxy.BatchPropertyAccessor"
+            endpointName="_batchAccessor" kind="Simple"/>
+        <Communication destinationClassName="xal.smf.proxy.BatchPropertyAccessor"/>
+    </Class>
+    <Class name="xal.smf.proxy.BatchChannelPropertyAccessor" x="408" y="574">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.smf.proxy.BatchPropertyAccessor"/>
+        <Communication destinationClassName="xal.smf.proxy.BatchPropertyAccessor"/>
+    </Class>
+</ClassDiagram>

@@ -1,0 +1,402 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ClassDiagram>
+    <Class name="xal.model.elem.sync.IElectromagnet" x="1574" y="1459">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+    </Class>
+    <Class name="xal.model.elem.IdealRfGapUpgraded.EnergyVariables"
+        x="1903" y="224">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+    </Class>
+    <Class name="xal.model.elem.SpectrumMapRfGap" x="931" y="31">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.model.elem.ThinElement"/>
+        <Extension destinationClassName="xal.model.elem.sync.IRfGap"/>
+        <Extension destinationClassName="xal.model.elem.sync.IRfCavityCell"/>
+        <Association
+            destinationClassName="xal.model.elem.SpectrumMapRfGap.PHASECALC"
+            endpointName="enmPhsCalcMth" kind="Simple"/>
+        <Communication destinationClassName="xal.model.elem.ThinElement"/>
+    </Class>
+    <Class name="xal.model.elem.ThickElement" x="1051" y="903">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.model.elem.Element"/>
+        <Communication destinationClassName="xal.model.elem.Element"/>
+    </Class>
+    <Class name="xal.model.elem.ThinElectromagnet" x="2008" y="890">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.model.elem.ThinElement"/>
+        <Extension destinationClassName="xal.model.elem.sync.IElectromagnet"/>
+    </Class>
+    <Class name="xal.model.elem.IdealRfGapUpgraded.PHASECALC" x="1901" y="103">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+    </Class>
+    <Class name="xal.model.elem.ThinElement" x="1571" y="912">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.model.elem.Element"/>
+    </Class>
+    <Class name="xal.model.elem.IdealMagFringeQuadFace" x="2022" y="639">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.model.elem.ThinElectromagnet"/>
+        <Communication destinationClassName="xal.model.elem.Element"/>
+        <Communication destinationClassName="xal.model.elem.ThinElectromagnet"/>
+    </Class>
+    <Class name="xal.model.elem.Collimator" x="2016" y="1157">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.model.elem.ThinElement"/>
+    </Class>
+    <Class name="xal.model.elem.IdealMagQuad" x="906" y="1274">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.model.elem.ThickElectromagnet"/>
+        <Communication destinationClassName="xal.model.elem.ThickElectromagnet"/>
+        <Communication destinationClassName="xal.model.elem.Element"/>
+    </Class>
+    <Class name="xal.model.elem.ThickElectromagnet" x="834" y="1089">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.model.elem.sync.IElectromagnet"/>
+        <Extension destinationClassName="xal.model.elem.ThickElement"/>
+    </Class>
+    <Class name="xal.model.elem.sync.IRfCavityCell" x="1466" y="58">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+    </Class>
+    <Class name="xal.model.elem.ThickDipole" x="658" y="605">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.model.elem.ThickElectromagnet"/>
+        <Communication destinationClassName="xal.model.elem.ThickElectromagnet"/>
+    </Class>
+    <Class name="xal.model.elem.IdealMagSteeringDipole" x="2322" y="857">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.model.elem.ThinElectromagnet"/>
+        <Communication destinationClassName="xal.model.elem.ThinElectromagnet"/>
+    </Class>
+    <Class name="xal.model.elem.ChargeExchangeFoil" x="2020" y="1268">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.model.elem.ThinElement"/>
+    </Class>
+    <Class name="xal.model.elem.ThinLens" x="1464" y="1082">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.model.elem.ThinElement"/>
+    </Class>
+    <Class name="xal.model.elem.IdealRfCavityDrift" x="1466" y="1280">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.model.elem.IdealDrift"/>
+    </Class>
+    <Class name="xal.model.elem.IdealMagDipoleFace2" x="2321" y="589">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.model.elem.ThinElectromagnet"/>
+        <Communication destinationClassName="xal.model.elem.Element"/>
+        <Communication destinationClassName="xal.model.elem.ThinElectromagnet"/>
+    </Class>
+    <Class name="xal.model.elem.IdealMagOctupole" x="2012" y="1043">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.model.elem.ThinElement"/>
+    </Class>
+    <Class name="xal.model.elem.IdealVerMagSteeringDipole" x="2385" y="1129">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.model.elem.IdealMagSteeringDipole"/>
+    </Class>
+    <Class name="xal.model.elem.IdealMagSextupole" x="980" y="757">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.model.elem.ThickElement"/>
+    </Class>
+    <Class name="xal.model.elem.ThinMatrix" x="1713" y="1090">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.model.elem.ThinElement"/>
+    </Class>
+    <Class name="xal.model.elem.IdealPermMagQuad" x="311" y="593">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.model.elem.ThickElectromagnet"/>
+        <Communication destinationClassName="xal.model.elem.ThickElectromagnet"/>
+        <Communication destinationClassName="xal.model.elem.Element"/>
+        <Communication destinationClassName="xal.model.elem.ThickElement"/>
+    </Class>
+    <Class name="xal.model.elem.IdealDrift" x="1145" y="1088">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.model.elem.ThickElement"/>
+        <Association
+            destinationClassName="xal.model.elem.IdealDrift.FringePMQ"
+            endpointName="fringes[]" kind="Simple"/>
+        <Communication destinationClassName="xal.model.elem.IdealPermMagQuad"/>
+        <Communication destinationClassName="xal.model.elem.ThickElectromagnet"/>
+        <Communication destinationClassName="xal.model.elem.Element"/>
+        <Communication destinationClassName="xal.model.elem.ThickElement"/>
+        <Communication destinationClassName="xal.model.elem.IdealDrift.FringePMQ"/>
+    </Class>
+    <Class name="xal.model.elem.SpectrumMapRfGap.EnergyVariables"
+        x="727" y="296">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+    </Class>
+    <Class name="xal.model.elem.IdealDrift.FringePMQ" x="1249" y="1274">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Communication destinationClassName="xal.model.elem.IdealPermMagQuad"/>
+        <Communication destinationClassName="xal.model.elem.ThickElectromagnet"/>
+        <Communication destinationClassName="xal.model.elem.Element"/>
+        <Communication destinationClassName="xal.model.elem.ThickElement"/>
+    </Class>
+    <Class name="xal.model.elem.SpectrumMapRfGap.PHASECALC" x="722" y="140">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+    </Class>
+    <Class name="xal.model.IElement" x="1312" y="187">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+    </Class>
+    <Class name="xal.model.elem.IdealMagSectorDipole2" x="509" y="1367">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.model.elem.ThickElectromagnet"/>
+        <Communication destinationClassName="xal.model.elem.ThickElectromagnet"/>
+        <Communication destinationClassName="xal.model.elem.Element"/>
+        <Communication destinationClassName="xal.model.elem.ThickElement"/>
+    </Class>
+    <Class name="xal.model.elem.IdealMagSkewQuad3" x="508" y="1085">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.model.elem.ThickElectromagnet"/>
+        <Communication destinationClassName="xal.model.elem.ThickElectromagnet"/>
+    </Class>
+    <Class name="xal.model.elem.IdealHorMagSteeringDipole" x="2261" y="1083">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.model.elem.IdealMagSteeringDipole"/>
+    </Class>
+    <Class name="xal.model.elem.IdealRfGapUpgraded" x="2114" y="-19">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.model.elem.ThinElement"/>
+        <Extension destinationClassName="xal.model.elem.sync.IRfGap"/>
+        <Extension destinationClassName="xal.model.elem.sync.IRfCavityCell"/>
+        <Association
+            destinationClassName="xal.model.elem.IdealRfGapUpgraded.PHASECALC"
+            endpointName="enmPhsCalcMth" kind="Simple"/>
+        <Communication destinationClassName="xal.model.elem.ThinElement"/>
+    </Class>
+    <Class name="xal.model.elem.sync.IRfGap" x="1668" y="63">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+    </Class>
+    <Class name="xal.model.elem.Element" x="1313" y="430">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.model.IElement"/>
+        <Association destinationClassName="xal.model.elem.Element"
+            endpointName="closeElements" kind="Simple"/>
+    </Class>
+    <Class name="xal.model.elem.IdealRfGap" x="1720" y="392">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.model.elem.ThinElement"/>
+        <Extension destinationClassName="xal.model.elem.sync.IRfGap"/>
+    </Class>
+    <Class name="xal.model.elem.IdealMagSolenoid" x="506" y="1232">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.model.elem.ThickElectromagnet"/>
+        <Communication destinationClassName="xal.model.elem.ThickElectromagnet"/>
+    </Class>
+</ClassDiagram>

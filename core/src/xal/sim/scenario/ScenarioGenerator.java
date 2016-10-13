@@ -206,6 +206,8 @@ class ScenarioGenerator {
         
         latSeq.setDebug( this.isDebugging() );
         latSeq.setDivideMagnetFlag( this.isMagnetDivided() );
+        //set divide magnet flag false
+        latSeq.setDivideMagnetFlag(false);
         
         Lattice         mdlLat = latSeq.createModelLattice(mgrSync);
         
@@ -215,6 +217,64 @@ class ScenarioGenerator {
         
         return mdlScenario;
     }
+    
+    
+    /**
+     * CKA
+     * <p>
+     * Generates a TDScenario from the given AcceleratorSeq supplied in the 
+     * constructor using supplied ElementMapping.
+     * </p>
+     * <p>
+     * This method will create a hierarchical model with the analogous structure
+     * of the hardware object being provided.  That is, the model returns is not a
+     * "flattened" version of the provided hardware representation. For example, 
+     * if the hardware sequence contains nested sequences such as an <code>
+     * AcceleratorSeqCombo</code> object would, then the returned model has nested
+     * <code>ElementSeq</code> objects representing them.  This is convenient,
+     * and necessary, for correct treatment of RF cavities.
+     * </p>
+     * 
+     * @param   smfSeq      the hardware sequence to be modeled.
+     * 
+     * @return              new model Scenario for the supplied accelerator sequence
+     * 
+     * @throws ModelException if there is an error building the Scenario
+     * 
+     * @since Dec 5, 2014     @author Christopher K. Allen
+     */     
+    public TDScenario generateTDScenario(AcceleratorSeq smfSeq) throws ModelException {
+
+        // Create a synchronization manager for the model
+        SynchronizationManager mgrSync = new SynchronizationManager();
+        
+        // Create a model lattice generator object for the given accelerator hardware sequence,
+        //  set any generation parameters, then create the model lattice
+        LatticeSequence latSeq;
+        if (smfSeq instanceof AcceleratorSeqCombo) {
+            AcceleratorSeqCombo smfSeqCombo = (AcceleratorSeqCombo)smfSeq;
+            
+            latSeq = new LatticeSequenceCombo(smfSeqCombo, this.mapNodeToModCls);
+            
+        } else {
+            
+            latSeq = new LatticeSequence(smfSeq, this.mapNodeToModCls);
+        }
+        
+        latSeq.setDebug( this.isDebugging() );
+        latSeq.setDivideMagnetFlag( this.isMagnetDivided() );
+        //set divide magnet flag false
+        latSeq.setDivideMagnetFlag(false);
+        
+        Lattice         mdlLat = latSeq.createModelLattice(mgrSync);
+        
+        // Create the model scenario object from the accelerator sequence, 
+        //  model lattice, and synchronization manager 
+        TDScenario        mdlScenario   = new TDScenario(smfSeq, mdlLat, mgrSync);
+        
+        return mdlScenario;
+    }
+    
     
 //	/**
 //	 * Generates a Scenario from AcceleratorSeq supplied in the constructor using supplied ElementMapping.

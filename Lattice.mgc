@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ClassDiagram>
+    <Class name="xal.model.IComposite" x="652" y="336">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.model.IComponent"/>
+    </Class>
+    <Class name="xal.sim.scenario.LatticeSequence" x="126" y="447">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.sim.scenario.LatticeElement"/>
+        <Association
+            destinationClassName="xal.sim.scenario.LatticeElement"
+            endpointName="lstLatElems" kind="Simple"/>
+        <Association
+            destinationClassName="xal.sim.scenario.ElementMapping"
+            endpointName="mapNodeToMdl" kind="Simple"/>
+        <Association
+            destinationClassName="xal.sim.scenario.LatticeSequence"
+            endpointName="lstSubSeqs" kind="Simple"/>
+        <Communication destinationClassName="xal.model.IComposite"/>
+        <Communication destinationClassName="xal.sim.scenario.LatticeElement"/>
+        <Communication destinationClassName="xal.sim.scenario.ElementMapping"/>
+        <Communication destinationClassName="xal.model.Lattice"/>
+        <Communication destinationClassName="xal.model.elem.ElementSeq"/>
+    </Class>
+    <Class name="xal.sim.scenario.LatticeElement" x="176" y="30">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Communication destinationClassName="xal.model.IComponent"/>
+    </Class>
+    <Class name="xal.model.IComponent" x="812" y="216">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+    </Class>
+    <Class name="xal.sim.scenario.LatticeSequenceCombo" x="168" y="742">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.sim.scenario.LatticeSequence"/>
+        <Communication destinationClassName="xal.sim.scenario.LatticeSequence"/>
+        <Communication destinationClassName="xal.model.elem.ElementSeq"/>
+    </Class>
+    <Class name="xal.sim.scenario.ElementMapping" x="599" y="67">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+    </Class>
+    <Class name="xal.model.Lattice" x="1002" y="688">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.model.elem.ElementSeq"/>
+        <Communication destinationClassName="xal.model.elem.ElementSeq"/>
+    </Class>
+    <Class name="xal.model.elem.StringPrinter" x="1016" y="589">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+    </Class>
+    <Class name="xal.model.elem.ElementSeq" x="628" y="504">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.model.IComposite"/>
+        <Association destinationClassName="xal.model.IComposite"
+            endpointName="cpsParent" kind="Simple"/>
+        <Association destinationClassName="xal.model.IComponent"
+            endpointName="m_lstCompsBackward" kind="Simple"/>
+        <Association destinationClassName="xal.model.IComponent"
+            endpointName="m_lstCompsForward" kind="Simple"/>
+        <Communication destinationClassName="xal.model.IComposite"/>
+        <Communication destinationClassName="xal.sim.scenario.LatticeElement"/>
+        <Communication destinationClassName="xal.model.IComponent"/>
+    </Class>
+    <Class name="xal.model.IElement" x="996" y="332">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.model.IComponent"/>
+    </Class>
+</ClassDiagram>

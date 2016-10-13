@@ -177,6 +177,7 @@ class SnapshotGroupTable {
 	 * @throws java.sql.SQLException  if an exception occurs during a SQL evaluation
 	 */
 	protected PreparedStatement getGroupsQueryByServiceStatement( final Connection connection ) throws SQLException {
+		System.out.println(connection);
 		return connection.prepareStatement( "SELECT * FROM " + TABLE_NAME + " WHERE " + SERVICE_COLUMN + " = ?" );
 	}
 	

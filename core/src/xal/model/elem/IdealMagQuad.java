@@ -101,7 +101,7 @@ public class IdealMagQuad extends ThickElectromagnet {
     	return radOut;
     }
     //hs
-    private double fieldPathFlag = 0.0;
+    private double fieldPathFlag = 0.0;//use beam momentum by default
     private double nominalKineEnergy = 0.0;
     public void setFieldPathFlag(double ba) {
     	fieldPathFlag = ba;
@@ -209,7 +209,7 @@ public class IdealMagQuad extends ThickElectromagnet {
         double p = Math.sqrt(w*(w+2*Er));
         
         double bPathFlag = getFieldPathFlag();
-        if (bPathFlag == 1) {//if bpathflag =1, then use nominal k0 from nominal kine energy
+        if (bPathFlag == 1) {//if bpathflag =1, then use nominal k0 from nominal kinetic energy
         	double w0 = getNominalKineEnergy();
         	if (w0==0.) {
         		w0 = probe.getKineticEnergy();
@@ -227,9 +227,10 @@ public class IdealMagQuad extends ThickElectromagnet {
        double k = 0;
        
        if (bPathFlag == 0) {
-    	   k = (charge * LightSpeed * getMagField() ) / p;
+    	   k = (charge * LightSpeed * getMagField() ) / p;//p is momentum*c of the beam
        } else if (bPathFlag == 1) {//brhoscaling
     	   k =  (charge * LightSpeed * getMagField() *getBRhoScaling())/p;
+    	   //if bpathflag=1,use the nominal value of k1, ignore beam energy.
        } else {
     	   k = K1;
        }

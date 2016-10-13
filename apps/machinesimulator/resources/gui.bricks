@@ -138,7 +138,10 @@
                     <ViewNode tag="States Plot View">
                         <ViewProxy type="javax.swing.Box_Vertical"/>
                         <BeanProperty name="name" value="States Plot"/>
-                        <ViewNode tag="States Plot">
+                        <ViewNode tag="Twiss Plot">
+                            <ViewProxy type="xal.extension.widgets.plot.FunctionGraphsJPanel"/>
+                        </ViewNode>
+						<ViewNode tag="Sigma Plot">
                             <ViewProxy type="xal.extension.widgets.plot.FunctionGraphsJPanel"/>
                         </ViewNode>
                     </ViewNode>

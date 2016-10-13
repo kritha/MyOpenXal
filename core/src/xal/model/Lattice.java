@@ -18,6 +18,7 @@ import java.util.List;
 import org.w3c.dom.Document;
 
 import xal.model.elem.ElementSeq;
+import xal.model.probe.Probe;
 import xal.model.xml.LatticeXmlWriter;
 
 
@@ -315,6 +316,11 @@ public class Lattice extends ElementSeq {
 
         super.print(os);
     }
+
+//	public void propagate_everyturn(Probe<?> probe) {
+//		// TODO Auto-generated method stub
+//		
+//	}
         
         
     

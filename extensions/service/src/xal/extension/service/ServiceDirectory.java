@@ -41,7 +41,7 @@ final public class ServiceDirectory {
 	/** thread pool */
 	final private ExecutorService THREAD_POOL;
     
-    /** coder for encoding and ecoding messages for remote transport */
+    /** coder for encoding and decoding messages for remote transport */
     final private Coder MESSAGE_CODER;
 	
 	/** XML-RPC server used for registering services */
@@ -79,6 +79,7 @@ final public class ServiceDirectory {
 				final String message = "Error attempting to initialize JmDNS.  Will attempt to try loopback mode instead of networked mode.";
 				Logger.getLogger("global").log( Level.WARNING, message, exception );
 				System.err.println( message );
+				System.out.println( message );//add by kritha in 20160201 09:57
 				_isLoopback = true;
 				_bonjour = JmDNS.create( InetAddress.getByName( "127.0.0.1" ) );
 			}
@@ -95,6 +96,7 @@ final public class ServiceDirectory {
 			final String message = "JmDNS initialization failed.  Services are disabled.";
 			Logger.getLogger("global").log( Level.SEVERE, message, exception );
 			System.err.println( message);
+			System.out.println( message );//add by kritha in 20160201 09:57
 			exception.printStackTrace();
 		}
 	}
@@ -205,7 +207,7 @@ final public class ServiceDirectory {
             }
               
 			int port = _rpcServer.getPort();
-			
+			System.out.println("servicedirectory.registerservice"+serviceName+"  "+protocol+"  "+provider);
 			// add the service to the RPC Server
 			_rpcServer.addHandler( serviceName, protocol, provider );
 			

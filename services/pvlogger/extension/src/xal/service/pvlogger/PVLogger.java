@@ -81,7 +81,7 @@ public class PVLogger {
 	
 	/** generate a new connection dictionary appropriate for logging */
 	static public ConnectionDictionary newLoggingConnectionDictionary() {
-		return ConnectionDictionary.getInstance( "pvlogger" );
+		return ConnectionDictionary.getInstance( "test" );//changed from pvlogger to test
 	}
 	
 	
@@ -174,15 +174,19 @@ public class PVLogger {
 	 */
 	public List<LoggerSession> requestEnabledLoggerSessionsForService( final String serviceID ) throws SQLException {
 		final String[] types = fetchTypes( serviceID );
+		System.out.println("in the rpc service, get group type of the service id: "+serviceID+" is:");
+		System.out.println(types.length);
+		
 		final List<LoggerSession> sessions = new ArrayList<LoggerSession>( types.length );
 		final Connection connection = getDatabaseConnection();
 		for ( final String groupID : types ) {
 			final ChannelGroup group = PERSISTENT_STORE.fetchChannelGroup( connection, groupID );
+			System.out.println(groupID+" and its logging period is "+group.getDefaultLoggingPeriod());
 			if ( group.getDefaultLoggingPeriod() > 0 ) {
 				sessions.add( requestLoggerSession( groupID ) );
 			}
 		}
-
+		System.out.println("the loggersessions are: "+sessions);
 		return sessions;
 	}
 	

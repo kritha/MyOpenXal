@@ -6,14 +6,19 @@
 
 package xal.app.machinesimulator;
 
+import java.awt.Color;
 import java.awt.event.*;
 import java.util.*;
 import java.net.*;
+import java.text.DecimalFormat;
 import java.io.*;
 import javax.swing.*;
 import javax.swing.text.*;
 import javax.swing.event.*;
 
+//import xal.app.virtualaccelerator.DiagPlot;
+import xal.ca.ConnectionException;
+import xal.ca.GetException;
 import xal.extension.application.*;
 import xal.extension.application.smf.*;
 import xal.smf.*;
@@ -22,6 +27,8 @@ import xal.tools.xml.XmlDataAdaptor;
 import xal.smf.data.XMLDataManager;
 import xal.tools.data.*;
 import xal.extension.bricks.WindowReference;
+import xal.extension.widgets.plot.BasicGraphData;
+import xal.extension.widgets.plot.FunctionGraphsJPanel;
 import xal.extension.widgets.swing.*;
 import xal.model.probe.traj.ProbeState;
 
@@ -42,8 +49,9 @@ public class MachineSimulatorDocument extends AcceleratorDocument implements Dat
     
     /** simulated states table model */
     final KeyValueFilteredTableModel<MachineSimulationRecord> STATES_TABLE_MODEL;
-	
-	
+    
+	/** diagplot object*/
+    public DiagPlot _diagplot;
     /** Empty Constructor */
     public MachineSimulatorDocument() {
         this( null );
@@ -80,6 +88,9 @@ public class MachineSimulatorDocument extends AcceleratorDocument implements Dat
     /** Make and configure the main window. */
     public void makeMainWindow() {
         mainWindow = (XalWindow)WINDOW_REFERENCE.getWindow();
+        final FunctionGraphsJPanel twissplot = (FunctionGraphsJPanel) WINDOW_REFERENCE.getView("Twiss Plot");
+		final FunctionGraphsJPanel sigamplot = (FunctionGraphsJPanel) WINDOW_REFERENCE.getView("Sigma Plot");			
+		_diagplot = new DiagPlot(twissplot, sigamplot);
 		setHasChanges( false );
     }
     
@@ -214,6 +225,8 @@ public class MachineSimulatorDocument extends AcceleratorDocument implements Dat
             public void actionPerformed( final ActionEvent event ) {
                 System.out.println( "running the model..." );
                 final MachineSimulation simulation = MODEL.runSimulation();
+                /** update graph*/
+                putDiagPVs(simulation);
                 STATES_TABLE_MODEL.setRecords( simulation.getSimulationRecords() );
             }
         });
@@ -309,4 +322,179 @@ public class MachineSimulatorDocument extends AcceleratorDocument implements Dat
 			}
 		}
     }
+    
+    
+    /** update the graph data after the run*/
+    protected void putDiagPVs(MachineSimulation res) {
+    	List<MachineSimulationRecord> records=res.getSimulationRecords();
+		/**temporary list data for getting the array bpm and ws datas*/
+		List<Double> tempalphax = new ArrayList<Double>();
+		List<Double> tempalphay = new ArrayList<Double>();
+		List<Double> tempbetax = new ArrayList<Double>();
+		List<Double> tempbetay = new ArrayList<Double>();
+		List<Double> tempsigmax = new ArrayList<Double>();
+		List<Double> tempsigmay = new ArrayList<Double>();
+		List<Double> tempbeampos = new ArrayList<Double>();	
+		List<Double> tempsigmaz = new ArrayList<Double>();
+		
+		for(MachineSimulationRecord record:records){
+			tempbeampos.add(record.getPosition());
+			tempalphax.add(record.getTwissParameters()[0].getAlpha());
+			tempalphay.add(record.getTwissParameters()[1].getAlpha());
+			tempbetax.add(record.getTwissParameters()[0].getBeta());
+			tempbetay.add(record.getTwissParameters()[1].getBeta());
+			tempsigmax.add(record.getTwissParameters()[0].getEnvelopeRadius()*1000);
+			tempsigmay.add(record.getTwissParameters()[1].getEnvelopeRadius()*1000);
+			tempsigmaz.add(record.getTwissParameters()[2].getEnvelopeRadius()*1000);
+		}
+		int size=records.size();
+//		double[] alphax=new double[tempalphax.size()];
+//		double[] alphay=new double[tempalphay.size()];
+//		double[] betax=new double[tempbetax.size()];
+//		double[] betay=new double[tempbetay.size()];
+//		double[] posi=new double[tempbeampos.size()];
+//		double[] sigmax=new double[tempsigmax.size()];
+//		double[] sigmay=new double[tempsigmay.size()];
+//		double[] sigmaz=new double[tempsigmaz.size()];
+		
+		double[] alphax=new double[size];
+		double[] alphay=new double[size];
+		double[] betax=new double[size];
+		double[] betay=new double[size];
+		double[] posi=new double[size];
+		double[] sigmax=new double[size];
+		double[] sigmay=new double[size];
+		double[] sigmaz=new double[size];
+		int i=0;
+		for (i = 0; i < size; i++) {
+			posi[i] = tempbeampos.get(i);
+			alphax[i] = tempalphax.get(i);
+			alphay[i] = tempalphay.get(i);
+			betax[i]=tempbetax.get(i);			
+			betay[i]=tempbetay.get(i);
+			sigmax[i]=tempsigmax.get(i);
+			sigmay[i]=tempsigmay.get(i);
+			sigmaz[i]=tempsigmaz.get(i);
+		}
+		try {
+			_diagplot.showalphaplot(posi, alphax, alphay);
+			_diagplot.showbetaplot(posi, betax, betay);
+			_diagplot.showsigmaplot(posi, sigmax, sigmay, sigmaz);
+		} catch (ConnectionException | GetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    }
+}
+
+
+/**show bpm and ws plots*/
+class DiagPlot {
+	
+	protected FunctionGraphsJPanel _twissplot;
+	protected FunctionGraphsJPanel _sigamplot;
+	protected BasicGraphData DataAlphax;
+	protected BasicGraphData DataAlphay;
+	protected BasicGraphData DataBetax;
+	protected BasicGraphData DataBetay;
+	protected BasicGraphData Datasigmax;
+	protected BasicGraphData Datasigmay;
+	protected BasicGraphData Datasigmaz;
+	
+	public DiagPlot(FunctionGraphsJPanel twissplot, FunctionGraphsJPanel sigamplot) {
+		_twissplot=twissplot;
+		_sigamplot=sigamplot;
+		setupPlot(twissplot,sigamplot);	 
+	}
+
+	public void showalphaplot(double[] p,double[] x, double[] y) throws ConnectionException, GetException {	
+		DataAlphax.updateValues(p, x);
+		DataAlphay.updateValues(p, y);			
+	}
+	
+	public void showbetaplot(double[] p,double[] x, double[] y) throws ConnectionException, GetException {		
+		DataBetax.updateValues(p, x);
+		DataBetay.updateValues(p, y);	    
+	}
+	
+	
+	public void showsigmaplot(double[] p,double[] sigmax,double[] sigmay,double[] sigmaz) throws ConnectionException, GetException {
+		Datasigmax.updateValues(p, sigmax);	
+		Datasigmay.updateValues(p, sigmay);	
+		Datasigmaz.updateValues(p, sigmaz);	
+	}
+	
+//	public void showsigmaplot(double[] wsp,double[] wsx, double[] wsy) throws ConnectionException, GetException {		
+//		DataWSx.updateValues(wsp, wsx);
+//		DataWSy.updateValues(wsp, wsy);
+//	}
+	
+	
+	public void setupPlot(FunctionGraphsJPanel twissplot,FunctionGraphsJPanel sigamplot) {
+		/** setup twissplot*/
+		// labels
+		twissplot.setName( "Twiss_PLOT" );
+		twissplot.setAxisNameX("Position(m)");
+		twissplot.setAxisNameY("Twiss Params");
+
+		twissplot.setNumberFormatX( new DecimalFormat( "###.###" ) );
+		twissplot.setNumberFormatY( new DecimalFormat( "###.###" ) );
+
+		// add legend support
+		twissplot.setLegendPosition( FunctionGraphsJPanel.LEGEND_POSITION_ARBITRARY );
+		twissplot.setLegendKeyString( "Legend" );
+		twissplot.setLegendBackground( Color.lightGray );
+		twissplot.setLegendColor( Color.black );
+		twissplot.setLegendVisible( true );		
+		
+		/** setup sigamplot*/
+		// labels
+		sigamplot.setName( "Sigma_PLOT" );
+		sigamplot.setAxisNameX("Position(m)");
+		sigamplot.setAxisNameY("Beam Envelope(mm)");
+
+		sigamplot.setNumberFormatX( new DecimalFormat( "###.###" ) );
+		sigamplot.setNumberFormatY( new DecimalFormat( "###.###" ) );
+
+		// add legend support
+		sigamplot.setLegendPosition( FunctionGraphsJPanel.LEGEND_POSITION_ARBITRARY );
+		sigamplot.setLegendKeyString( "Legend" );
+		sigamplot.setLegendBackground( Color.lightGray );
+		sigamplot.setLegendColor( Color.black );
+		sigamplot.setLegendVisible( true );
+		
+		
+		DataAlphax=new BasicGraphData();
+		DataAlphay=new BasicGraphData();	
+		DataBetax=new BasicGraphData();	 
+		DataBetay=new BasicGraphData();	
+		Datasigmax=new BasicGraphData();
+		Datasigmay=new BasicGraphData();
+		Datasigmaz=new BasicGraphData();
+		
+		DataAlphax.setGraphProperty(_twissplot.getLegendKeyString(), "Alphax");
+		DataAlphay.setGraphProperty(_twissplot.getLegendKeyString(), "Alphay");		    
+		DataBetax.setGraphProperty(_twissplot.getLegendKeyString(), "Betax");
+		DataBetay.setGraphProperty(_twissplot.getLegendKeyString(), "Betay");	    
+		Datasigmax.setGraphProperty(_sigamplot.getLegendKeyString(), "sigmax");		
+		Datasigmay.setGraphProperty(_sigamplot.getLegendKeyString(), "sigmay");
+		Datasigmaz.setGraphProperty(_sigamplot.getLegendKeyString(), "sigmaz");
+		
+		DataAlphax.setGraphColor(Color.blue);
+		DataAlphay.setGraphColor(Color.orange);    
+		DataBetax.setGraphColor(Color.RED);
+		DataBetay.setGraphColor(Color.BLACK);		    
+		Datasigmax.setGraphColor(Color.RED);
+		Datasigmay.setGraphColor(Color.BLACK);
+	    Datasigmaz.setGraphColor(Color.blue);
+	    
+	   _twissplot.addGraphData(DataAlphax);
+	   _twissplot.addGraphData(DataAlphay);		
+	   _twissplot.addGraphData(DataBetax);
+	   _twissplot.addGraphData(DataBetay);				
+	   _sigamplot.addGraphData(Datasigmax);
+	   _sigamplot.addGraphData(Datasigmay);			
+	   _sigamplot.addGraphData(Datasigmaz);
+	}
+	
 }

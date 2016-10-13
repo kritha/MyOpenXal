@@ -3,6 +3,7 @@
  */
 package xal.sim.sync;
 
+import java.awt.print.Printable;
 import java.util.*;
 
 import xal.model.IComponent;
@@ -66,6 +67,7 @@ public class SynchronizationManager {
 	// key = accelerator node, value = list of elements sync'ed to that node
 	
 	private Map<AcceleratorNode,List<IElement>> allNodeElems = new HashMap<AcceleratorNode,List<IElement>>();
+	private Map<AcceleratorNode,List<IComponent>> timeDependentElems = new HashMap<AcceleratorNode,List<IComponent>>();
 	// a map of all accelerator nodes and a list of the elements corresponding
 	// to them, whether synchronized or not
 	
@@ -100,6 +102,9 @@ public class SynchronizationManager {
 	
 	public void resync() throws SynchronizationException {
 		final Collection<AcceleratorNode> nodes = synchronizedNodeElems.keySet();
+		//System.out.println(nodes);
+		//System.out.println(synchronizedNodeElems);
+		//System.out.println(allNodeElems);
 		propertyAccessor.requestValuesForNodes( nodes, syncMode );
 		
 		for ( final AcceleratorNode node : nodes ) {
@@ -209,6 +214,22 @@ public class SynchronizationManager {
 		return allNodeElems.get(aNode);
 	}
 	
+	//add by yangye 20160515
+	public void addTimeDependentElementMappedTo(IComponent anElem, AcceleratorNode aNode) {
+		List<IComponent> elems = timeDependentElementsMappedTo(aNode);
+		if (elems == null) {
+			elems = new ArrayList<IComponent>();
+			timeDependentElems.put(aNode, elems);
+		}
+		elems.add(anElem);
+	}
+	
+	//add by yangye 20160515
+	public List<IComponent> timeDependentElementsMappedTo(AcceleratorNode aNode) {
+		return timeDependentElems.get(aNode);
+	}
+	
+	
 	private void addSynchronizedElementMappedTo(IElement anElem, AcceleratorNode aNode) {
 		List<IElement> elems = synchronizedElementsMappedTo(aNode);
 		if (elems == null) {
@@ -300,6 +321,16 @@ public class SynchronizationManager {
 			getSynchronizer( elem ).checkSynchronization( elem, values );
 		}
 		return true;
+	}
+
+
+	public Map<AcceleratorNode,List<IComponent>> getTimeDependentElems() {
+		return timeDependentElems;
+	}
+
+
+	public void setTimeDependentElems(Map<AcceleratorNode,List<IComponent>> timeDependentElems) {
+		this.timeDependentElems = timeDependentElems;
 	}
 	
 }

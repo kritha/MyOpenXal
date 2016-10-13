@@ -376,8 +376,14 @@ class PVLoggerWindow extends AcceleratorWindow implements SwingConstants, Scroll
 	/** Update the list of logger sessions identified by group */
 	protected void updateGroupListView() {
 		final RemoteLoggerRecord handler = _model.getSelectedHandler();
+		System.out.println(handler);
+		if (handler!=null) {
+			System.out.println(handler.getGroupTypes());
+		}
+		
 		final Vector<String> groups = ( handler != null ) ? new Vector<String>( handler.getGroupTypes() ) : new Vector<String>();
 		Collections.sort( groups );
+		System.out.println(groups);
 		_groupTypesListView.setListData( groups );
 	}
 	
@@ -429,6 +435,7 @@ class PVLoggerWindow extends AcceleratorWindow implements SwingConstants, Scroll
 			public void valueChanged(ListSelectionEvent event) {
 				if ( event.getValueIsAdjusting() )  return;
 				final RemoteLoggerRecord record = getSelectedRemoteLoggerRecord();
+				System.out.println(record);
 				_model.setSelectedHandler( record );
 
 			}

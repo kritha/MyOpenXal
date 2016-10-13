@@ -339,7 +339,7 @@ public class SpectrumMapRfGap extends ThinElement implements IRfGap, IRfCavityCe
     /**
      * phase and energy computation method
      */
-    private PHASECALC       enmPhsCalcMth = PHASECALC.DYNENERGY;
+    private PHASECALC       enmPhsCalcMth = PHASECALC.DYNENERGY;//PHASECALC.DYNENERGY;
 
 
     //
@@ -967,10 +967,10 @@ public class SpectrumMapRfGap extends ThinElement implements IRfGap, IRfCavityCe
     @Override
     protected PhaseMap transferMap(IProbe probe) throws ModelException {
 
-        //      System.out.println("This is " + this.getId());
-        //      System.out.println("dblFieldE0 is   " + this.getE0());
-        //      System.out.println("ETL is  " + this.getETL());
-        //      System.out.println("");
+//              System.out.println("This is " + this.getId());
+//              System.out.println("dblFieldE0 is   " + this.getE0());
+//              System.out.println("ETL is  " + this.getETL());
+//              System.out.println("");
 
 
         // Get probe parameters at initial energy

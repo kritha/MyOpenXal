@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ClassDiagram>
+    <Class name="xal.tools.database.ConnectionDictionary" x="739" y="20">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="true"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="true"
+            accessors-accepted="true" constructors-accepted="true"/>
+        <Communication destinationClassName="xal.tools.database.DBConfiguration"/>
+    </Class>
+    <Class name="xal.tools.database.DBConfiguration" x="674" y="447">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="true"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="true"
+            accessors-accepted="true" constructors-accepted="true"/>
+        <Association
+            destinationClassName="xal.tools.database.DBAccountConfig"
+            endpointName="ACCOUNTS" kind="Simple"/>
+        <Association
+            destinationClassName="xal.tools.database.DBServerConfig"
+            endpointName="SERVERS" kind="Simple"/>
+        <Communication destinationClassName="xal.tools.database.ConnectionDictionary"/>
+        <Communication destinationClassName="xal.tools.database.DBServerConfig"/>
+        <Communication destinationClassName="xal.tools.database.DBAccountConfig"/>
+    </Class>
+    <Class name="xal.tools.database.DBServerConfig" x="280" y="753">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="true"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="true"
+            accessors-accepted="true" constructors-accepted="true"/>
+    </Class>
+    <Class name="xal.tools.database.DBAccountConfig" x="279" y="512">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="true"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="true"
+            accessors-accepted="true" constructors-accepted="true"/>
+    </Class>
+    <Class name="xal.plugin.oracle.OracleDatabaseAdaptor" x="257" y="334">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="true"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="true"
+            accessors-accepted="true" constructors-accepted="true"/>
+        <Extension destinationClassName="xal.tools.database.DatabaseAdaptor"/>
+    </Class>
+    <Class name="xal.tools.database.DatabaseAdaptor" x="192" y="17">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="true"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="true"
+            accessors-accepted="true" constructors-accepted="true"/>
+        <Communication destinationClassName="xal.tools.database.DBConfiguration"/>
+    </Class>
+</ClassDiagram>

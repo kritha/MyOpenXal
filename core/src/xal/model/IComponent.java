@@ -204,5 +204,23 @@ public interface IComponent {
      * @exception  ModelException    error advancing the probe state
      */
     void backPropagate(IProbe probe, double d) throws ModelException;
+    
+    /**
+     *  return weather the component is a time dependent element.
+     *
+     *  @return     true for a time dependent element, false or not (by default)
+     */
+    public default boolean  isTimeDependent(){
+    	return false;
+    }
+    
+    /**
+     *  update parameters for a time dependent element.
+     *
+     *  @return     null
+     */
+    public default void updateParams(double time){
+    	
+    }
  
 }

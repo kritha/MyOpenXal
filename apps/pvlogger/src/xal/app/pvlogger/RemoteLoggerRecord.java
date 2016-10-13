@@ -45,7 +45,8 @@ public class RemoteLoggerRecord implements UpdateListener {
 
 	
 	/** Constructor */
-    public RemoteLoggerRecord( final RemoteLogging proxy ) {
+    @SuppressWarnings("unchecked")
+	public RemoteLoggerRecord( final RemoteLogging proxy ) {
 		REMOTE_PROXY = proxy;
 		REMOTE_ADDRESS = ((ServiceState)proxy).getServiceHost();
 		
@@ -69,6 +70,12 @@ public class RemoteLoggerRecord implements UpdateListener {
 				return REMOTE_PROXY.getHeartbeat();
 			}
 		});
+		
+//		GROUP_TYPES = (List<String>) createRemoteOperationCache( new Callable<List<String>>() {
+//			public List<String> call() {
+//				return REMOTE_PROXY.getGroupTypes();
+//			}
+//		});
 
 		GROUP_TYPES = REMOTE_PROXY.getGroupTypes();
 		

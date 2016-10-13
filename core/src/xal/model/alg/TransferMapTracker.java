@@ -16,6 +16,7 @@ import xal.tools.data.GenericRecord;
 import xal.model.IElement;
 import xal.model.IProbe;
 import xal.model.ModelException;
+import xal.model.elem.IdealRfGap;
 import xal.model.probe.TransferMapProbe;
 
 

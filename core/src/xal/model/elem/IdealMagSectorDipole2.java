@@ -60,7 +60,7 @@ public class IdealMagSectorDipole2 extends ThickElectromagnet {
      */
     
     /** A small number used for comparing probe positions which are stepped via addition*/
-    private static final double    EPS = 1e-12;
+    private static final double    EPS = 1e-9;//1e-12;
     
     
 
@@ -497,8 +497,8 @@ public class IdealMagSectorDipole2 extends ThickElectromagnet {
         /*
          * Compute and return path variation parameter
          */
-        final double dblLenFactor = 1.0 - h/h0;
-        
+//        final double dblLenFactor = 1.0 - h/h0;//这行代码有问题，当h=h0时返回就是0，也就是说穿过的距离为0
+        final double dblLenFactor=h0/h;
         return dblLenFactor;
     }
  
@@ -575,7 +575,8 @@ public class IdealMagSectorDipole2 extends ThickElectromagnet {
         
         final double B     = this.getMagField();
         final double gamma = probe.getGamma();
-        
+//        final double beta =probe.getBeta();
+        //System.out.println(dblLen);
         //
         // Check for zero fields - we cannot support this
         //  Actually, now we replace the dipole magnet with a drift space if zero fields are detected.
@@ -681,6 +682,13 @@ public class IdealMagSectorDipole2 extends ThickElectromagnet {
             M41 = -h0 * (1. - Math.cos(kx * dL)) / (kx * kx);
             M45 = dL - gamma * gamma * h0 * h0 *
             (kx * dL - Math.sin(kx * dL)) / (kx * kx * kx);
+            //M45在原来的基础上做了一些修改，参考trace3d和tracewin的传输矩阵公式
+            //20160603发现原来的矩阵没有问题，是正确的，改回原来的传输矩阵
+//            M05 = gamma * gamma * h0 * (1. - Math.cos(kx * dL)) / (kx * kx);
+//            M15 = gamma * gamma * h0 * Math.sin(kx * dL) / kx;
+//            M40 = -h0 * Math.sin(kx * dL) / kx;
+//            M41 = -h0 * (1. - Math.cos(kx * dL)) / (kx * kx);
+//            M45 = dL*(1-h0*h0/(kx*kx)) - gamma * gamma * h0 * h0 *(kx * dL*beta*beta - Math.sin(kx * dL)) / (kx * kx * kx);
         }
         else
         {
@@ -693,6 +701,11 @@ public class IdealMagSectorDipole2 extends ThickElectromagnet {
             M45 = dL - gamma * gamma * h0 * h0 *
             (ElementaryFunction.sinh(kx * dL) - kx * dL)
             / (kx * kx * kx);
+//            M05 = gamma * gamma * h0 *(ElementaryFunction.cosh(kx * dL) - 1.) / (kx * kx);
+//            M15 = gamma * gamma * h0 * ElementaryFunction.sinh(kx * dL) / kx;
+//            M40 = -h0 * ElementaryFunction.sinh(kx * dL) / kx;
+//            M41 = -h0 * (ElementaryFunction.cosh(kx * dL) - 1.) / (kx * kx);
+//            M45 = dL*(1-h0*h0/(kx*kx)) - gamma * gamma * h0 * h0 *(ElementaryFunction.sinh(kx * dL) - kx * dL*beta*beta) / (kx * kx * kx);
         }
         
         M05 *= R / R0;
@@ -899,17 +912,20 @@ public class IdealMagSectorDipole2 extends ThickElectromagnet {
      */
     private double compCurrentAngle2(double s) throws IllegalArgumentException {
         double  L0   = this.getLength();
+        //System.out.println(L0);
         double theta = Math.abs( this.getDesignBendingAngle() );
-        
+        //s=((s*10)%309)/10;
+        //if(s>30)s-=30.9;
+        s=((s*10+1)%309-1)/10;
         // Check for illegal argument
         if (s < 0.0 - EPS) {
-            System.err.println("IdealMagSectorDipole#compCurrentAngle2(): probe position s=" + s + " is less than 0, i.e. before the dipole entrance");
+            //System.err.println("IdealMagSectorDipole#compCurrentAngle2(): probe position s=" + s + " is less than 0, i.e. before the dipole entrance");
             
             return 0.0;
         }
         
         if (s > L0 + EPS) {
-            System.err.println("IdealMagSectorDipole#compCurrentAngle2(): probe position s=" + s + " is greater than L0, i.e. outside dipole exit");
+            //System.err.println("IdealMagSectorDipole#compCurrentAngle2(): probe position s=" + s + " is greater than L0, i.e. outside dipole exit");
             
             return theta;
         }

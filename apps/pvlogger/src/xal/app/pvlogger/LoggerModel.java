@@ -109,6 +109,7 @@ public class LoggerModel {
 			public void serviceAdded( final ServiceDirectory directory, final ServiceRef serviceRef ) {
 				final RemoteLogging proxy = directory.getProxy( RemoteLogging.class, serviceRef );
 				final RemoteLoggerRecord remoteRecord = new RemoteLoggerRecord( proxy );
+				System.out.println(remoteRecord.getGroupTypes());
 				final String serviceID = serviceRef.getRawName();
 
 				System.out.println( "Found remote PV Logger with ID: " + serviceID );

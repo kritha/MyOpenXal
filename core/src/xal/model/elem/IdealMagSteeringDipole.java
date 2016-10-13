@@ -238,6 +238,7 @@ public class IdealMagSteeringDipole extends ThinElectromagnet {
 //        double w = (q/e)*(c/Er)*(B/(beta*gamma));
         double w = (q)*(c/Er)*(B/(beta*gamma));
         double dp = w*dL; // dp polarity = q*B polarity
+        //dp算出来就是偏转角度
 //      B polarity for negative charged particle -> x: left +, y: upper +
 // angle polarity was opposite up to 27 Nov 07
         //changed so that angle + is x+, angle - is y- for negatives

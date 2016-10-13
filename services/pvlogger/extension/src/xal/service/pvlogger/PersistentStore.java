@@ -42,7 +42,7 @@ class PersistentStore {
 	/** Constructor */
 	public PersistentStore( final DataAdaptor storeAdaptor ) {
 		final Map<String,DBTableConfiguration> tableConfigurations = loadTableConfigurations( storeAdaptor );
-		SNAPSHOT_GROUP_CHANNEL_TABLE = new SnapshotGroupChannelTable( tableConfigurations.get( "SnapshotGroupChannel" ) );
+		SNAPSHOT_GROUP_CHANNEL_TABLE = new SnapshotGroupChannelTable( tableConfigurations.get( "SnapshotGroupChannel" ) );//这些get里面的参数都是dbtable的entity属性
 		SNAPSHOT_GROUP_TABLE = new SnapshotGroupTable( tableConfigurations.get( "SnapshotGroup" ), SNAPSHOT_GROUP_CHANNEL_TABLE );
 		MACHINE_SNAPSHOT_TABLE = new MachineSnapshotTable( tableConfigurations.get( "MachineSnapshot" ) );
 		

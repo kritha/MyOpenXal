@@ -17,18 +17,23 @@ import java.sql.Statement;
 import java.sql.SQLException;
 import java.net.URL;
 import java.util.*;
+import java.awt.Color;
+import java.awt.Font;
 import java.awt.event.*;
 
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.text.*;
+
+import org.omg.CORBA.PRIVATE_MEMBER;
+
 import javax.swing.JToggleButton.ToggleButtonModel;
 
 import xal.extension.application.smf.*;
 import xal.tools.xml.*;
 import xal.tools.data.*;
 import xal.extension.application.*;
-import xal.tools.apputils.NonConsecutiveSeqSelector; 
+import xal.tools.apputils.NonConsecutiveSeqSelector.MyTableModel;
 import xal.tools.database.ConnectionDictionary;
 //import gov.sns.tools.database.*;
 
@@ -43,12 +48,12 @@ import xal.tools.database.ConnectionDictionary;
 
 public class Db2XalDocument extends AcceleratorDocument implements DataListener {
 	/** name of the production server in the configruation file */
-	final private static String PRODUCTION_SERVER = "production";
+	final private static String PRODUCTION_SERVER = "Product";//production
 	
 	/** name of the development server in the configruation file */
-	final private static String DEVELOPMENT_SERVER = "development";
+	final private static String DEVELOPMENT_SERVER = "XiPAF_Dev";//development
 	
-	private static final String OUTPUT_FILENAME = "sns.xdxf";
+	private static final String OUTPUT_FILENAME = "XiPAF.xdxf";
 	
 	protected JFileChooser _exportFileChooser;
 
@@ -57,9 +62,11 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 	 */
 	protected PlainDocument textDocument;
 
-	protected String databaseServer = PRODUCTION_SERVER;
+	protected String databaseServer = DEVELOPMENT_SERVER;
 
 	protected ArrayList<Object> seqList;
+	
+	private String wholeText="";//whole text 用于存储生成的整个光学文件
 
 	// private Db2XalDocument myDoc;
 
@@ -92,22 +99,100 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 			public void actionPerformed(ActionEvent event) {
 				// NonConsecutiveSequenceSelector seqSel = new
 				// SequenceSelector(myDoc);
-				NonConsecutiveSeqSelector seqSel = new NonConsecutiveSeqSelector();
-				seqSel.selectSequence();
-				seqList = seqSel.getSeqList();
-				if (seqList.size() != 0)
+//				NonConsecutiveSeqSelector seqSel = new NonConsecutiveSeqSelector();
+//				seqSel.selectSequence();
+				MyTableModel myModel = ((Db2XalWindow)getMainWindow()).getSeqSelector().geTableModel();
+				seqList = new java.util.ArrayList<Object>();
+				for (int i = 0; i < myModel.data.length; i++) {
+					if (((Boolean) myModel.data[i][1]).booleanValue())
+						seqList.add(myModel.data[i][0]);
+				}
+				if (seqList.size() != 0){
 					setHasChanges(true);
+					JOptionPane.showMessageDialog( getMainWindow(), "已选择的加速器序列为："+seqList.toString(), "Message!", JOptionPane.PLAIN_MESSAGE );
+				}else {
+					JOptionPane.showMessageDialog( getMainWindow(), "还没有选择加速器序列!  请先选择一个或多个加速器序列", "Warning!", JOptionPane.WARNING_MESSAGE);
+				}
 			}
 		};
 		showSeqsAction.putValue(Action.NAME, "showSeqs");
 		commander.registerAction(showSeqsAction);
+		
+		/*
+		 * 20160817增加工具栏按钮，用于保存xdxf文档
+		 */
+		// action for save whole text in text area as a xdxf file
+				Action SaveAction = new AbstractAction() {
+					static final long serialVersionUID = 0;
+
+					public void actionPerformed(ActionEvent event) {
+						JTextArea textView=((Db2XalWindow)getMainWindow()).getTextView();
+						if ( _exportFileChooser == null ) {
+							_exportFileChooser = new JFileChooser("E:/xal/config");
+//							new JFileChooser("E:/xal/config");
+							_exportFileChooser.setSelectedFile( new File( OUTPUT_FILENAME ) );
+						}
+						
+						int status = _exportFileChooser.showSaveDialog( getMainWindow() );
+						switch( status ) {
+							case JFileChooser.APPROVE_OPTION:
+								break;
+							case JFileChooser.CANCEL_OPTION:
+								return;
+							case JFileChooser.ERROR_OPTION:
+								return;
+							default:
+								return;
+						}
+						//判断选择的文件是否存储，并选择是否覆盖，20160817添加
+//						System.out.println(_exportFileChooser.getSelectedFile().getName());
+						File selFile=_exportFileChooser.getSelectedFile();
+						while (selFile.exists()) {
+							int overwrite=JOptionPane.showConfirmDialog(getMainWindow(), "文件"+selFile.getName()+"已经存在，是否覆盖？","是否覆盖",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE);
+							if (overwrite!=JOptionPane.YES_OPTION) {
+//								return;
+								status = _exportFileChooser.showSaveDialog( getMainWindow() );
+								switch( status ) {
+									case JFileChooser.APPROVE_OPTION:
+										break;
+									case JFileChooser.CANCEL_OPTION:
+										return;
+									case JFileChooser.ERROR_OPTION:
+										return;
+									default:
+										return;
+								}
+							}else {
+								break;
+							}
+							selFile=_exportFileChooser.getSelectedFile();
+						}
+						if (!textView.getText().equals("")) {
+							OutputStream fout;
+							byte buf0[] = textView.getText().getBytes();
+							try {
+								fout = new FileOutputStream( _exportFileChooser.getSelectedFile() );
+								fout.write(buf0);
+								fout.close();
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+							JOptionPane.showMessageDialog( getMainWindow(), "文件已更新，输出文件名为： "+_exportFileChooser.getSelectedFile().getName()+".", "Message!", JOptionPane.PLAIN_MESSAGE );
+						}else {
+							JOptionPane.showMessageDialog( getMainWindow(), "文本框没有内容，请先生成XDXF文件！", "Message!", JOptionPane.PLAIN_MESSAGE );
+						}
+					}
+				};
+				SaveAction.putValue(Action.NAME, "save-xal");
+				commander.registerAction(SaveAction);
 
 		ToggleButtonModel useProdModel;
 		ToggleButtonModel useDevlModel;
 
 		// action for query production database
 		useProdModel = new ToggleButtonModel();
-		useProdModel.setSelected(true);
+		useProdModel.setSelected(false);
 		useProdModel.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
 				databaseServer = PRODUCTION_SERVER;
@@ -117,6 +202,7 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 
 		// action for query development database
 		useDevlModel = new ToggleButtonModel();
+//		useDevlModel.setSelected(true);
 		useDevlModel.setSelected(true);
 		useDevlModel.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
@@ -131,7 +217,7 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 
 			public void actionPerformed(ActionEvent event) {
 				if (seqList == null) {
-					JOptionPane.showMessageDialog( getMainWindow(), "You have not selected any sequence yet!  Please select sequence(s) first.", "Warning!", JOptionPane.WARNING_MESSAGE);
+					JOptionPane.showMessageDialog( getMainWindow(), "还没有选择加速器序列!  请先选择一个或多个加速器序列", "Warning!", JOptionPane.WARNING_MESSAGE);
 				} 
 				else {
 					try {
@@ -141,7 +227,21 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 						exception.printStackTrace();
 					}
 
-					JOptionPane.showMessageDialog( getMainWindow(), "The output XDXF file name is sns.xdxf.", "Message!", JOptionPane.PLAIN_MESSAGE );
+					/*
+					 * 20160816增加textarea显示所有的光学文件内容
+					 */
+					JTextArea textView=((Db2XalWindow)getMainWindow()).getTextView();
+					textView.setFont(new Font("Serif",Font.PLAIN,17));
+					textView.setForeground(Color.red);
+					textView.setText(wholeText);
+					if (!wholeText.equals("")) {
+						JOptionPane.showMessageDialog( getMainWindow(), "文件已更新，输出文件名为： "+_exportFileChooser.getSelectedFile().getName()+".", "Message!", JOptionPane.PLAIN_MESSAGE );
+						//在textview更新显示之后，清空wholeText对象
+						wholeText="";
+					}else {
+						JOptionPane.showMessageDialog( getMainWindow(), "生成的XDXF字符串为空，没有写入XDXF文件，请检查程序配置之后再尝试 ", "Warning!", JOptionPane.WARNING_MESSAGE );
+					}
+//					JOptionPane.showMessageDialog( getMainWindow(), "文件已更新，输出文件名为： "+_exportFileChooser.getSelectedFile().getName()+".", "Message!", JOptionPane.PLAIN_MESSAGE );
 				}
 			}
 
@@ -153,12 +253,24 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 	
 	
 	/** generate a channel entry for a given signal */
+	@SuppressWarnings("unused")
 	static private String channelEntry( final String handle, final String signalName, final Map<String,String> signalTable, final boolean settable ) {
 		return "          <channel handle=\"" + handle + "\"" + " signal=\"" + signalTable.get( signalName ) + "\"" + " settable=\"" + settable + "\"/>\n";
 	}
 	
+	/** generate a channel entry for a given signal */
+	static private String channelEntry( final Map<String,List<String>> signalTable) {
+		final int channel_num=signalTable.get("signal").size();
+		String str="";
+		for (int i = 0; i < channel_num; i++) {
+			str=str+"          <channel handle=\"" + signalTable.get("handle").get(i) + "\"" + " signal=\"" + signalTable.get( "signal" ).get(i) + "\"" + " settable=\"" + signalTable.get("settable").get(i) + "\"/>\n";
+		}
+		return str;
+	}
+	
 	
 	/** fetch the signals for the specified device */
+	@SuppressWarnings("unused")
 	static private Map<String,String> fetchSignals( final PreparedStatement fetchStatement, final String deviceID ) throws java.sql.SQLException {
 		fetchStatement.setString( 1, deviceID );
 		final ResultSet signalSet = fetchStatement.executeQuery();
@@ -172,15 +284,39 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 		return signalTable;
 	}
 	
+	/** fetch the signals for the specified device */
+	/*
+	 * 结合XiPAF数据库的特点从channel表中获取所需要的通道信息
+	 */
+	static private Map<String, List<String>> fetchChannels( final PreparedStatement fetchStatement, final String deviceID ) throws java.sql.SQLException {
+		fetchStatement.setString( 1, deviceID );
+		final ResultSet signalSet = fetchStatement.executeQuery();
+		final Map<String, List<String>> signalTable = new HashMap<String, List<String>>();
+		final List<String> signalList = new ArrayList<String>();
+		final List<String> hanleList = new ArrayList<String>();
+		final List<String> settableList = new ArrayList<String>();
+		while ( signalSet.next() ) {
+			signalList.add(deviceID+":"+signalSet.getString( "SIGNAL" ));//channel中只包含signal id的后半部分，前面还需要加上dvc_id
+			hanleList.add(signalSet.getString("HANDLE"));
+			settableList.add(signalSet.getString("SETTABLE"));
+			//System.out.println( "name: " + signalName + ", signal: " + signalID );
+		}
+		signalTable.put( "signal", signalList );
+		signalTable.put("handle", hanleList);
+		signalTable.put("settable", settableList);
+		return signalTable;
+	}
+	
 	
 	/** generate and write the optics to a file */
+	@SuppressWarnings("unused")
 	public void writeXal() throws IOException {
 		if ( _exportFileChooser == null ) {
-			_exportFileChooser = new JFileChooser();
+			_exportFileChooser = new JFileChooser("E:/xal/config");
 			_exportFileChooser.setSelectedFile( new File( OUTPUT_FILENAME ) );
 		}
 		
-		final int status = _exportFileChooser.showSaveDialog( getMainWindow() );
+		int status = _exportFileChooser.showSaveDialog( getMainWindow() );
 		switch( status ) {
 			case JFileChooser.APPROVE_OPTION:
 				break;
@@ -190,6 +326,28 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 				return;
 			default:
 				return;
+		}
+		
+		File selFile=_exportFileChooser.getSelectedFile();
+		while (selFile.exists()) {
+			int overwrite=JOptionPane.showConfirmDialog(getMainWindow(), "文件"+selFile.getName()+"已经存在，是否覆盖？","是否覆盖",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE);
+			if (overwrite!=JOptionPane.YES_OPTION) {
+//				return;
+				status = _exportFileChooser.showSaveDialog( getMainWindow() );
+				switch( status ) {
+					case JFileChooser.APPROVE_OPTION:
+						break;
+					case JFileChooser.CANCEL_OPTION:
+						return;
+					case JFileChooser.ERROR_OPTION:
+						return;
+					default:
+						return;
+				}
+			}else {
+				break;
+			}
+			selFile=_exportFileChooser.getSelectedFile();
 		}
 		
 		OutputStream fout;
@@ -203,17 +361,17 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 
 		str = "<?xml version = '1.0' encoding = 'UTF-8'?>\n"
 				+ "<!DOCTYPE xdxf SYSTEM \"xdxf.dtd\">\n"
-				+ "<xdxf system=\"sns\" ver=\"2.0.0\" date=\""
+				+ "<xdxf system=\"XiPAF\" ver=\"2.0.0\" date=\""
 				+ today.toString() + "\">\n";
 
 		int dtlCounter = 1;
-		int cclCounter = 1;
-
+//		int cclCounter = 1;
+		wholeText+=str;
 		byte buf0[] = str.getBytes();
 		fout.write(buf0);
 
 		try {
-			final ConnectionDictionary connectionDictionary = ConnectionDictionary.getInstance( "reports", databaseServer );
+			final ConnectionDictionary connectionDictionary = ConnectionDictionary.getInstance( "mysql_dev", databaseServer );
 			conn = connectionDictionary.getDatabaseAdaptor().getConnection( connectionDictionary );
 
 			// Create a Statement
@@ -227,100 +385,42 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 				sequences[i] = (String) seqList.get(i);
 			}
 
-			if (sequences[0].substring(0, 4).equals("Ring")) {
+			if (sequences[0].length()>3 && sequences[0].substring(0, 4).equals("Ring")) {
 				str = "  <comboseq id=\"Ring\">\n"
-						+ "	  <sequence id=\"Ring1\"/>\n"
-						+ "	  <sequence id=\"Ring2\"/>\n"
-						+ "	  <sequence id=\"Ring3\"/>\n"
-						+ "	  <sequence id=\"Ring4\"/>\n"
-						+ "	  <sequence id=\"Ring5\"/>\n" + "  </comboseq>\n";
+						+ "	  <sequence id=\"RING1\"/>\n"
+						+ "	  <sequence id=\"RING2\"/>\n" + "  </comboseq>\n";
 			} else {
-				str = "  <comboseq id=\"MEBT-DTL\">\n"
-						+ "	  <sequence id=\"MEBT\"/>\n"
-						+ "	  <sequence id=\"DTL1\"/>\n"
-						+ "	  <sequence id=\"DTL2\"/>\n"
-						+ "	  <sequence id=\"DTL3\"/>\n"
-						+ "	  <sequence id=\"DTL4\"/>\n"
-						+ "	  <sequence id=\"DTL5\"/>\n"
-						+ "	  <sequence id=\"DTL6\"/>\n" + "  </comboseq>\n"
-						+ "  <comboseq id=\"MEBT-SCL\">\n"
-						+ "	  <sequence id=\"MEBT\"/>\n"
-						+ "	  <sequence id=\"DTL1\"/>\n"
-						+ "	  <sequence id=\"DTL2\"/>\n"
-						+ "	  <sequence id=\"DTL3\"/>\n"
-						+ "	  <sequence id=\"DTL4\"/>\n"
-						+ "	  <sequence id=\"DTL5\"/>\n"
-						+ "	  <sequence id=\"DTL6\"/>\n"
-						+ "	  <sequence id=\"CCL1\"/>\n"
-						+ "	  <sequence id=\"CCL2\"/>\n"
-						+ "	  <sequence id=\"CCL3\"/>\n"
-						+ "	  <sequence id=\"CCL4\"/>\n"
-						+ "	  <sequence id=\"SCLMed\"/>\n"
-						+ "	  <sequence id=\"SCLHigh\"/>\n" + "  </comboseq>\n"
-						+ "  <comboseq id=\"MEBT-HEBT\">\n"
-						+ "	  <sequence id=\"MEBT\"/>\n"
-						+ "	  <sequence id=\"DTL1\"/>\n"
-						+ "	  <sequence id=\"DTL2\"/>\n"
-						+ "	  <sequence id=\"DTL3\"/>\n"
-						+ "	  <sequence id=\"DTL4\"/>\n"
-						+ "	  <sequence id=\"DTL5\"/>\n"
-						+ "	  <sequence id=\"DTL6\"/>\n"
-						+ "	  <sequence id=\"CCL1\"/>\n"
-						+ "	  <sequence id=\"CCL2\"/>\n"
-						+ "	  <sequence id=\"CCL3\"/>\n"
-						+ "	  <sequence id=\"CCL4\"/>\n"
-						+ "	  <sequence id=\"SCLMed\"/>\n"
-						+ "	  <sequence id=\"SCLHigh\"/>\n"
-						+ "	  <sequence id=\"HEBT1\"/>\n"
-						+ "	  <sequence id=\"HEBT2\"/>\n" + "  </comboseq>\n"
-						+ "  <comboseq id=\"MEBT-LDmp\">\n"
-						+ "	  <sequence id=\"MEBT\"/>\n"
-						+ "	  <sequence id=\"DTL1\"/>\n"
-						+ "	  <sequence id=\"DTL2\"/>\n"
-						+ "	  <sequence id=\"DTL3\"/>\n"
-						+ "	  <sequence id=\"DTL4\"/>\n"
-						+ "	  <sequence id=\"DTL5\"/>\n"
-						+ "	  <sequence id=\"DTL6\"/>\n"
-						+ "	  <sequence id=\"CCL1\"/>\n"
-						+ "	  <sequence id=\"CCL2\"/>\n"
-						+ "	  <sequence id=\"CCL3\"/>\n"
-						+ "	  <sequence id=\"CCL4\"/>\n"
-						+ "	  <sequence id=\"SCLMed\"/>\n"
-						+ "	  <sequence id=\"SCLHigh\"/>\n"
-						+ "	  <sequence id=\"HEBT1\"/>\n"
-						+ "	  <sequence id=\"LDmp\"/>\n" + "  </comboseq>\n"
-						+ "  <comboseq id=\"DTL\">\n"
-						+ "	  <sequence id=\"DTL1\"/>\n"
-						+ "	  <sequence id=\"DTL2\"/>\n"
-						+ "	  <sequence id=\"DTL3\"/>\n"
-						+ "	  <sequence id=\"DTL4\"/>\n"
-						+ "	  <sequence id=\"DTL5\"/>\n"
-						+ "	  <sequence id=\"DTL6\"/>\n" + "  </comboseq>\n"
-						+ "  <comboseq id=\"CCL\">\n"
-						+ "	  <sequence id=\"CCL1\"/>\n"
-						+ "	  <sequence id=\"CCL2\"/>\n"
-						+ "	  <sequence id=\"CCL3\"/>\n"
-						+ "	  <sequence id=\"CCL4\"/>\n" + "  </comboseq>\n"
-						+ "  <comboseq id=\"SCL\">\n"
-						+ "	  <sequence id=\"SCLMed\"/>\n"
-						+ "	  <sequence id=\"SCLHigh\"/>\n" + "  </comboseq>\n"
-						+ "  <comboseq id=\"HEBT\">\n"
-						+ "	  <sequence id=\"HEBT1\"/>\n"
-						+ "	  <sequence id=\"HEBT2\"/>\n" + "  </comboseq>\n"
-						+ "  <comboseq id=\"Ring\">\n"
-						+ "	  <sequence id=\"Ring1\"/>\n"
-						+ "	  <sequence id=\"Ring2\"/>\n"
-						+ "	  <sequence id=\"Ring3\"/>\n"
-						+ "	  <sequence id=\"Ring4\"/>\n"
-						+ "	  <sequence id=\"Ring5\"/>\n" + "  </comboseq>\n"
-						+ "  <comboseq id=\"RTBT\">\n"
-						+ "	  <sequence id=\"RTBT1\"/>\n"
-						+ "	  <sequence id=\"RTBT2\"/>\n" + "  </comboseq>\n";
+				str = "  <comboseq id=\"DTL-MEBT\">\n"
+						+ "	  <sequence id=\"DTL\"/>\n"
+						+ "	  <sequence id=\"MEBT\"/>\n" + "  </comboseq>\n"
+//						+ "  <comboseq id=\"DTL-LDmp\">\n"
+//						+ "	  <sequence id=\"DTL\"/>\n"
+//						+ "	  <sequence id=\"LDmp\"/>\n" + "  </comboseq>\n"
+//						+ "  <comboseq id=\"MEBT-HDmp\">\n"
+//						+ "	  <sequence id=\"MEBT\"/>\n"
+//						+ "	  <sequence id=\"RING1\"/>\n"
+//						+ "	  <sequence id=\"HDmp\"/>\n" + "  </comboseq>\n"
+//						+ "  <comboseq id=\"RING1-HDmp\">\n"
+//						+ "	  <sequence id=\"RING1\"/>\n"
+//						+ "	  <sequence id=\"HDmp\"/>\n" + "  </comboseq>\n"
+						+ "  <comboseq id=\"RING1-HEBT\">\n"
+						+ "	  <sequence id=\"RING1\"/>\n"
+						+ "	  <sequence id=\"HEBT\"/>\n" + "  </comboseq>\n"
+						+ "  <comboseq id=\"HEBT-T2\">\n"
+						+ "	  <sequence id=\"HEBT\"/>\n"
+						+ "	  <sequence id=\"T2\"/>\n" + "  </comboseq>\n"
+						+ "  <comboseq id=\"HEBT-T1\">\n"
+						+ "	  <sequence id=\"HEBT\"/>\n"
+						+ "	  <sequence id=\"T1\"/>\n" + "  </comboseq>\n"
+						+ "  <comboseq id=\"RING\">\n"
+						+ "	  <sequence id=\"RING1\"/>\n"
+						+ "	  <sequence id=\"RING2\"/>\n" + "  </comboseq>\n";
 			}
 			buf0 = str.getBytes();
+			wholeText+=str;
 			fout.write(buf0);
 			
-			final PreparedStatement SEQUENCE_FETCH = conn.prepareStatement( "SELECT * FROM EPICS.DVC_SEQ_NM where SEQ_NM = ?" );
+			final PreparedStatement SEQUENCE_FETCH = conn.prepareStatement( "SELECT * FROM EPICS.DVC_SEQ where SEQ_NM = ?" );
 
 			// loop through all the sequences
 			for (int k = 0; k < sequences.length; k++) {
@@ -334,21 +434,10 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 
 				// produce <sequence> and its attributes
 				while (rsetSeq.next()) {
-					str = "  <sequence id=\"" + sequences[k] + "\"" + " len=\"" + rsetSeq.getString("TOTAL_SEQ_LNGTH") + "\"";
-					if (sequences[k].equals("DTL1")
-							|| sequences[k].equals("DTL2")
-							|| sequences[k].equals("DTL3")
-							|| sequences[k].equals("DTL4")
-							|| sequences[k].equals("DTL5")
-							|| sequences[k].equals("DTL6"))
+					str = "  <sequence id=\"" + sequences[k] + "\"" + " len=\"" + rsetSeq.getString("SEQ_LENGTH") + "\"";
+					if (sequences[k].equals("DTL"))
 						// add DTL type to the <sequence>
-						str = str.concat(" type=\"DTLTank\"");
-					if (sequences[k].equals("CCL1")
-							|| sequences[k].equals("CCL2")
-							|| sequences[k].equals("CCL3")
-							|| sequences[k].equals("CCL4"))
-						// add DTL type to the <sequence>
-						str = str.concat(" type=\"CCL\"");
+						str = str.concat(" type=\"DTLTank\"");//只有DTL作为sequence有type属性
 
 					str = str.concat(">\n");
 
@@ -356,8 +445,8 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 					str = str.concat("   <attributes>\n");
 					seqAttTag = true;
 
-					if (rsetSeq.getString("PREV_SEQ_NM") != "null") {
-						if (rsetSeq.getString("ALT_SEQ_NM") == null)
+					if (!rsetSeq.getString("PREV_SEQ_NM").isEmpty()) {//使用isEmpty而不是==null来判断，因为数据库中存放的是空值
+						if (rsetSeq.getString("ALT_SEQ_NM").isEmpty())
 							str = str.concat("      <sequence predecessors=\""
 									+ rsetSeq.getString("PREV_SEQ_NM")
 									+ "\"/>\n");
@@ -367,12 +456,13 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 									+ rsetSeq.getString("ALT_SEQ_NM")
 									+ "\"/>\n");
 					} else {
-						str = str.concat("      <sequence predecessors=\"\"/>\n");
+						str = str.concat("      <sequence predecessors=\"null\"/>\n");
 					}
 				}
 
 				System.out.println(sequences[k]);
-
+				
+				//增加加速腔序列额外的rfcavity属性，其余的序列没有改属性
 				str = queryDTL_CCL_cavs(str, stmt, sequences, k);
 
 				// insert a begin of sequence flag (as a virtual node)
@@ -381,98 +471,47 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 						+ " pos=\"0\" len=\"0\"/>\n";
 
 				// get all the magnet nodes within this sequence
-				/*
-				 * stmt0 = conn .prepareStatement("SELECT EPICS.DVC.DVC_ID, " +
-				 * "EPICS.DVC.SUBSYS_ID, " + "EPICS.DVC.DVC_TYPE_ID, " +
-				 * "EPICS.DVC.PARENT_DVC_ID, " +
-				 * "EPICS.FUNC_DVC_GRP_ITEM.RELATED_DVC, " +
-				 * "EPICS.MAG_DVC.POLARITY, " + "EPICS.MAG_DVC.PM_QUAD_STRENGTH, " +
-				 * "EPICS.BEAM_LINE_DVC_LOC.DSGN_GLBL_COORD_X, " +
-				 * "EPICS.BEAM_LINE_DVC_LOC.DSGN_GLBL_COORD_Y, " +
-				 * "EPICS.BEAM_LINE_DVC_LOC.DSGN_GLBL_COORD_Z, " +
-				 * "EPICS.BEAM_LINE_DVC_LOC.DSGN_GLBL_COORD_PHI, " +
-				 * "EPICS.BEAM_LINE_DVC_LOC.DSGN_GLBL_COORD_PSI, " +
-				 * "EPICS.BEAM_LINE_DVC_LOC.DSGN_GLBL_COORD_THETA, " +
-				 * "EPICS.BEAM_LINE_DVC_LOC.DIST_FROM_STRT, " +
-				 * "EPICS.BEAM_LINE_DVC_LOC.PHYS_LNGTH, " +
-				 * "EPICS.BEAM_LINE_DVC_LOC.DSGN_USAGE_IND, " +
-				 * "EPICS.BEAM_LINE_DVC_LOC.SEQ_NM, " + "MAGMDL.MAG_LNGTH, " +
-				 * "MAGMDL.GAP, " + "MAGMDL.DIPOLE_BEND_ANGLE, " +
-				 * "MAGMDL.DIPOLE_ENTR_ROTATION_ANGLE, " +
-				 * "MAGMDL.DIPOLE_EXIT_ROTATION_ANGLE, " + "MAGMDL.PATH_LNGTH, " +
-				 * "MAGMDL.DIPOLE_QUAD_TERM, " + "EPICS.DVC_SETTING.SETTING_ID, " +
-				 * "EPICS.DVC_SETTING.SETTING_VALUE " + "FROM EPICS.DVC, " +
-				 * "EPICS.BEAM_LINE_DVC_LOC, " + "EPICS.FUNC_DVC_GRP_ITEM, " +
-				 * "EPICS.MAG_DVC, " + "EPICS.DSGN_DVC_MNFCTR_MDL_ASGN, " +
-				 * "EPICS.DVC_SETTING, " + "EQUIP.MAG_MNFCTR_MDL MAGMDL " +
-				 * "where (EPICS.DVC.DVC_TYPE_ID IN " + "( 'QH', 'QV', 'PMQH',
-				 * 'PMQV', 'DCH', 'DCV', 'DH', 'DV', " + "'QTH', 'QTV',
-				 * 'InjSptm', 'SH', 'SV', 'SSH', 'SSV' )) " + "and
-				 * EPICS.BEAM_LINE_DVC_LOC.SEQ_NM = '" + sequences[k] + "' " +
-				 * "and EPICS.DVC.Dvc_id = EPICS.BEAM_LINE_DVC_LOC.Dvc_id " +
-				 * "and EPICS.DVC.Dvc_id = EPICS.MAG_DVC.Dvc_id " + "and
-				 * EPICS.DVC.Dvc_id = EPICS.DVC_SETTING.Dvc_id(+) " + "and
-				 * EPICS.DVC.Dvc_id = EPICS.DSGN_DVC_MNFCTR_MDL_ASGN.Dvc_id " +
-				 * "and EPICS.DVC.Dvc_id = EPICS.FUNC_DVC_GRP_ITEM.Dvc_id(+) " +
-				 * "and MAGMDL.MDL_NBR = EPICS.DSGN_DVC_MNFCTR_MDL_ASGN.MDL_NBR " +
-				 * "and MAGMDL.MNFCTR_ID =
-				 * EPICS.DSGN_DVC_MNFCTR_MDL_ASGN.MNFCTR_ID " + "order by " +
-				 * "EPICS.BEAM_LINE_DVC_LOC.Dist_From_Strt, " + " DECODE(
-				 * EPICS.DVC.dvc_type_id," + " 'QH',1," + " 'QV',1," + " 2)");
-				 */
+				//查询所有的磁铁元件
 				stmt0 = conn.prepareStatement("SELECT EPICS.DVC.DVC_ID, "
 								+ "EPICS.DVC.SUBSYS_ID, "
 								+ "EPICS.DVC.DVC_TYPE_ID, "
 								+ "EPICS.DVC.PARENT_DVC_ID, "
-								+ "EPICS.FUNC_DVC_GRP_ITEM.RELATED_DVC, "
-								+ "EPICS.FUNC_DVC_GRP.FUNC_DVC_GRP_NM, "
+								+ "EPICS.BEAM_LINE_DVC.GLBL_COORD_X, "
+								+ "EPICS.BEAM_LINE_DVC.GLBL_COORD_Y, "
+								+ "EPICS.BEAM_LINE_DVC.GLBL_COORD_Z, "
+								+ "EPICS.BEAM_LINE_DVC.GLBL_COORD_PITCH, "
+								+ "EPICS.BEAM_LINE_DVC.GLBL_COORD_YAW, "
+								+ "EPICS.BEAM_LINE_DVC.GLBL_COORD_ROLL, "
+								+ "EPICS.BEAM_LINE_DVC.DIST_FROM_START, "
+								+ "EPICS.BEAM_LINE_DVC.PHYS_LENGTH, "
+								+ "EPICS.BEAM_LINE_DVC.DSGN_USAGE_IND, "
+								+ "EPICS.BEAM_LINE_DVC.SEQ_NM, "
 								+ "EPICS.MAG_DVC.POLARITY, "
 								+ "EPICS.MAG_DVC.PM_QUAD_STRENGTH, "
-								+ "EPICS.BEAM_LINE_DVC_LOC.DSGN_GLBL_COORD_X, "
-								+ "EPICS.BEAM_LINE_DVC_LOC.DSGN_GLBL_COORD_Y, "
-								+ "EPICS.BEAM_LINE_DVC_LOC.DSGN_GLBL_COORD_Z, "
-								+ "EPICS.BEAM_LINE_DVC_LOC.DSGN_GLBL_COORD_PHI, "
-								+ "EPICS.BEAM_LINE_DVC_LOC.DSGN_GLBL_COORD_PSI, "
-								+ "EPICS.BEAM_LINE_DVC_LOC.DSGN_GLBL_COORD_THETA, "
-								+ "EPICS.BEAM_LINE_DVC_LOC.DIST_FROM_STRT, "
-								+ "EPICS.BEAM_LINE_DVC_LOC.PHYS_LNGTH, "
-								+ "EPICS.BEAM_LINE_DVC_LOC.DSGN_USAGE_IND, "
-								+ "EPICS.BEAM_LINE_DVC_LOC.SEQ_NM, "
-								+ "MAGMDL.MAG_LNGTH, "
-								+ "MAGMDL.GAP, "
-								+ "MAGMDL.DIPOLE_BEND_ANGLE, "
-								+ "MAGMDL.DIPOLE_ENTR_ROTATION_ANGLE, "
-								+ "MAGMDL.DIPOLE_EXIT_ROTATION_ANGLE, "
-								+ "MAGMDL.PATH_LNGTH, "
+								+ "EPICS.MAG_DVC.MAG_LENGTH, "
+								+ "EPICS.MAG_DVC.APERTURE_H, "
+								+ "EPICS.MAG_DVC.DIPOLE_BEND_ANGLE, "
+								+ "EPICS.MAG_DVC.DIPOLE_ENTR_ROTATION_ANGLE, "
+								+ "EPICS.MAG_DVC.DIPOLE_EXIT_ROTATION_ANGLE, "
+								+ "EPICS.MAG_DVC.PATH_LENGTH, "
 								+ "EPICS.MAG_DVC.DIPOLE_QUAD_TERM, "
-								+ "EPICS.DVC_SETTING.SETTING_ID, "
-								+ "EPICS.DVC_SETTING.SETTING_VALUE "
+								+ "EPICS.DVC_SET.SETTING_ID, "
+								+ "EPICS.DVC_SET.SETTING_VALUE "
 								+ "FROM EPICS.DVC, "
-								+ "EPICS.BEAM_LINE_DVC_LOC, "
-								+ "EPICS.FUNC_DVC_GRP_ITEM, "
-								+ "EPICS.FUNC_DVC_GRP, "
+								+ "EPICS.BEAM_LINE_DVC, "
 								+ "EPICS.MAG_DVC, "
-								+ "EQUIP.EQUIP, "
-								+ "EQUIP.EQUIP_DVC_ASGN, "
-								+ "EPICS.DVC_SETTING, "
-								+ "EQUIP.MAG_MNFCTR_MDL MAGMDL "
+								+ "EPICS.DVC_SET "
 								+ "where (EPICS.DVC.DVC_TYPE_ID IN "
 								+ "( 'QH', 'QV', 'PMQH', 'PMQV', 'DCH', 'DCV', 'DH', 'DV', "
-								+ "'QTH', 'QTV', 'QSC', 'EKick', 'InjSptm', 'ExSptm', 'Sptm', 'SH', 'SV', 'SSH', 'SSV' )) "
-								+ "and EPICS.BEAM_LINE_DVC_LOC.SEQ_NM = '"
+								+ "'QTH', 'QTV', 'QSC', 'EKick', 'InjSptm', 'ExjSptm', 'Sptm', 'SH', 'SV', 'SSH', 'SSV', 'InjChicane', 'InjBump', 'SFM' )) "//新增InjChicane(kicker),InjBump(kicker),SFM(quad)
+								+ "and EPICS.BEAM_LINE_DVC.SEQ_NM = '"
 								+ sequences[k]
 								+ "' "
-								+ "and EPICS.DVC.Dvc_id = EPICS.BEAM_LINE_DVC_LOC.Dvc_id "
+								+ "and EPICS.DVC.Dvc_id = EPICS.BEAM_LINE_DVC.Dvc_id "
 								+ "and EPICS.DVC.Dvc_id = EPICS.MAG_DVC.Dvc_id "
-								+ "and EPICS.DVC.Dvc_id = EPICS.DVC_SETTING.Dvc_id(+) "
-								+ "and EPICS.DVC.Dvc_id = EPICS.FUNC_DVC_GRP_ITEM.Dvc_id(+) "
-								+ "and EPICS.FUNC_DVC_GRP_ITEM.FUNC_DVC_GRP_ID = EPICS.FUNC_DVC_GRP.FUNC_DVC_GRP_ID(+) "
-								+ "and EPICS.DVC.Dvc_id = EQUIP.EQUIP_DVC_ASGN.Dvc_id(+) "
-								+ "and EQUIP.EQUIP.Equip_id = EQUIP.EQUIP_DVC_ASGN.Equip_id "
-								+ "and MAGMDL.MDL_NBR = EQUIP.EQUIP.MDL_NBR "
+								+ "and EPICS.DVC.Dvc_id = EPICS.DVC_SET.Dvc_id "
 								+ "order by "
-								+ "EPICS.BEAM_LINE_DVC_LOC.Dist_From_Strt, "
-								+ "DECODE( EPICS.DVC.dvc_type_id, 'QH',1, 'QV',1, 'QTH',1, 'QTV',1, 2), EPICS.DVC.DVC_ID");
+								+ "EPICS.BEAM_LINE_DVC.Dist_From_Start");
 
 				rset = stmt0.executeQuery();
 
@@ -486,6 +525,8 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 					final String deviceType = rset.getString( "DVC_TYPE_ID" );
 					System.out.println(deviceID);
 					// check if the previous device has a closed </node>
+					//应该是会查出多条DVC_ID相同的记录，所以需要和前面一条记录的DVC_ID比较，
+					//若不同，则需要加上node的结尾</node>
 					if ( !(deviceID.equals(tmpID)) && !(tmpID == null) ) {
 						if (chSuiteTag) {
 							str = str.concat("       </channelsuite>\n");
@@ -494,10 +535,11 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 					}
 
 					if (!(deviceID.equals(tmpID))) {
-						final boolean ringLike = sequences[k].startsWith("Ring") || sequences[k].startsWith("RTBT") || sequences[k].equals("IDmp+") || sequences[k].equals("EDmp");
-						if ( deviceType.equals("InjSptm") || deviceType.equals( "ExSptm" ) || deviceType.equals("Sptm") ) {
-							str = str.concat("    <node type=\"DH" + "\" id=\"" + deviceID + "\"" + " pos=\"" + rset.getString("DIST_FROM_STRT") + "\""
-									+ " len=\"" + getNumericString( rset.getString("PHYS_LNGTH") )
+						final boolean ringLike = sequences[k].startsWith("RING") || sequences[k].startsWith("T") || sequences[k].equals("HDmp") || sequences[k].equals("HEBT");
+						//将切割磁铁类型改成DH
+						if ( deviceType.equals("InjSptm") || deviceType.equals( "ExjSptm" ) || deviceType.equals("Sptm")) {
+							str = str.concat("    <node type=\"DH" + "\" id=\"" + deviceID + "\"" + " pos=\"" + rset.getString("DIST_FROM_START") + "\""
+									+ " len=\"" + getNumericString( rset.getString("PHYS_LENGTH") )
 									+ "\"");
 							if (rset.getString("DSGN_USAGE_IND").equals("Y"))
 								str = str.concat(" status=\"true\">\n");
@@ -505,33 +547,33 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 								str = str.concat(" status=\"false\">\n");
 						}
 						// for Ring QTH and QTV, we replace the device type with
-						// "QH" and "QV"
-						else if ( deviceType.equals("QTH") && ringLike ) {
-							str = str.concat("    <node type=\"QH" + "\" id=\"" + deviceID + "\" pos=\""
-									+ rset.getString("DIST_FROM_STRT") + "\" len=\"" + getNumericString( rset.getString("PHYS_LNGTH") ) + "\"");
-							if (rset.getString("DSGN_USAGE_IND").equals("Y"))
-								str = str.concat(" status=\"true\">\n");
-							else
-								str = str.concat(" status=\"" + "false\">\n");
-
-						} else if (rset.getString("DVC_TYPE_ID").equals("QTV")
-								&& (sequences[k].equals("Ring1") || sequences[k].equals("Ring2") || sequences[k].equals("Ring3")
-										|| sequences[k].equals("Ring4") || sequences[k].equals("Ring5") || sequences[k].equals("RTBT1") || sequences[k].equals("RTBT2"))) {
-							str = str.concat("    <node type=\"QV" + "\""
-									+ " id=\"" + rset.getString("DVC_ID")
-									+ "\"" + " pos=\""
-									+ rset.getString("DIST_FROM_STRT") + "\""
-									+ " len=\"" + getNumericString( rset.getString("PHYS_LNGTH") )
-									+ "\"");
-							if (rset.getString("DSGN_USAGE_IND").equals("Y"))
-								str = str.concat(" status=\"true\">\n");
-							else
-								str = str.concat(" status=\"false\">\n");
-						}
+						// "QH" and "QV"，其中T是Trim的含义，即含有辅助绕组
+//						else if ( deviceType.equals("QTH") && ringLike ) {
+//							str = str.concat("    <node type=\"QH" + "\" id=\"" + deviceID + "\" pos=\""
+//									+ rset.getString("DIST_FROM_START") + "\" len=\"" + getNumericString( rset.getString("PHYS_LENGTH") ) + "\"");
+//							if (rset.getString("DSGN_USAGE_IND").equals("Y"))
+//								str = str.concat(" status=\"true\">\n");
+//							else
+//								str = str.concat(" status=\"" + "false\">\n");
+//
+//						} else if (rset.getString("DVC_TYPE_ID").equals("QTV")
+//								&& (sequences[k].equals("Ring1") || sequences[k].equals("Ring2") || sequences[k].equals("Ring3")
+//										|| sequences[k].equals("Ring4") || sequences[k].equals("Ring5") || sequences[k].equals("RTBT1") || sequences[k].equals("RTBT2"))) {
+//							str = str.concat("    <node type=\"QV" + "\""
+//									+ " id=\"" + rset.getString("DVC_ID")
+//									+ "\"" + " pos=\""
+//									+ rset.getString("DIST_FROM_START") + "\""
+//									+ " len=\"" + getNumericString( rset.getString("PHYS_LENGTH") )
+//									+ "\"");
+//							if (rset.getString("DSGN_USAGE_IND").equals("Y"))
+//								str = str.concat(" status=\"true\">\n");
+//							else
+//								str = str.concat(" status=\"false\">\n");
+//						}
 
 						else {
-							str = str.concat("    <node type=\"" + deviceType + "\"" + " id=\"" + deviceID + "\" pos=\"" + rset.getString("DIST_FROM_STRT") + "\""
-									+ " len=\"" + getNumericString( rset.getString("PHYS_LNGTH") ) + "\"");
+							str = str.concat("    <node type=\"" + deviceType + "\"" + " id=\"" + deviceID + "\" pos=\"" + rset.getString("DIST_FROM_START") + "\""
+									+ " len=\"" + getNumericString( rset.getString("PHYS_LENGTH") ) + "\"");
 							if (rset.getString("DSGN_USAGE_IND").equals("Y"))
 								str = str.concat(" status=\"true\">\n");
 							else
@@ -539,96 +581,119 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 						}
 						str = str.concat("       <attributes>\n");
 
+						/*
+						 * 下面设置磁铁特有的属性，包括磁铁的长度，极性，默认场强等等
+						 */
 						// converting the polarity 'A', 'B' to '1', '-1' we need to handle the proton part of the machine and the H- part of the machine differently
+						//将数据库中A和B转化成+1和-1两种表示方式
 						if (rset.getString("POLARITY").equals("A")) {
-							if ( ringLike && ( deviceType.equals("DCH") || deviceType.equals("DCV") || deviceType.equals("EKick") ) )
-								str = str.concat("          <magnet len=\"" + getNumericString( rset.getString("MAG_LNGTH") ) + "\" polarity=\"+1\"");
+							if ( ringLike && ( deviceType.equals("DCH") || deviceType.equals("DCV") || deviceType.equals("EKick") || deviceType.equals("InjChicane") || deviceType.equals("InjBump") ) )
+								str = str.concat("          <magnet len=\"" + getNumericString( rset.getString("MAG_LENGTH") ) + "\" polarity=\"+1\"");
 							else
-								str = str.concat("          <magnet len=\"" + getNumericString( rset.getString("MAG_LNGTH") ) + "\" polarity=\"-1\"");
+								str = str.concat("          <magnet len=\"" + getNumericString( rset.getString("MAG_LENGTH") ) + "\" polarity=\"-1\"");
 						} 
 						else if (rset.getString("POLARITY").equals("B")) {
-							if ( ringLike && ( deviceType.equals("DCH") || deviceType.equals("DCV") || deviceType.equals("EKick") ) )
-								str = str.concat("          <magnet len=\"" + getNumericString( rset.getString("MAG_LNGTH") ) + "\" polarity=\"-1\"");
+							if ( ringLike && ( deviceType.equals("DCH") || deviceType.equals("DCV") || deviceType.equals("EKick") || deviceType.equals("InjChicane") || deviceType.equals("InjBump") ) )
+								str = str.concat("          <magnet len=\"" + getNumericString( rset.getString("MAG_LENGTH") ) + "\" polarity=\"-1\"");
 							else
-								str = str.concat("          <magnet len=\"" + getNumericString( rset.getString("MAG_LNGTH") ) + "\" polarity=\"+1\"");
+								str = str.concat("          <magnet len=\"" + getNumericString( rset.getString("MAG_LENGTH") ) + "\" polarity=\"+1\"");
 						} 
 						else
-							str = str.concat("          <magnet len=\"" + getNumericString( rset.getString("MAG_LNGTH") ) + "\" polarity=\"0\"");
+							str = str.concat("          <magnet len=\"" + getNumericString( rset.getString("MAG_LENGTH") ) + "\" polarity=\"0\"");
 
+						/*
+						 * 下面设置磁铁的默认场强，区分永磁铁和电磁铁
+						 */
+						//判断永磁铁和电磁铁，因为永磁铁只存在于DTL中，所以对对sequence进行判断是否为DTL
+						//永磁四级铁的强度保存磁铁的表格当中，是固定值
+						//电磁铁的强度保存在DVC_set表格当中，有一个默认的设计值
+						//对于XiPAF来说，DTL中没有校正铁，不需要对校正铁进行操作
 						if ( sequences[k].startsWith("DTL") ) {
-							if ( !deviceType.equals("DCH") && !deviceType.equals("DCV") ) {
-								// add field sign for PMQ, will be removed once the polarity key is populated
-								if ( deviceType.equals("PMQH") ) {
-									str = str.concat(" dfltMagFld=\"" + getNumericString( rset.getString("PM_QUAD_STRENGTH") ) + "\"/>\n");
-								} 
-								else if ( deviceType.equals("PMQV") ) {
-									str = str.concat(" dfltMagFld=\"" + getNumericString( rset.getString("PM_QUAD_STRENGTH") ) + "\"/>\n");
-								}
-							} else {
-								str = str.concat(" dfltMagFld=\"" + getNumericString( rset.getString("SETTING_VALUE") ) + "\"/>\n");
-							}
+							//其实DTL中只有PMQ，所以不需要额外的判断
+//							if ( !deviceType.equals("DCH") && !deviceType.equals("DCV") ) {
+//								// add field sign for PMQ, will be removed once the polarity key is populated
+//								if ( deviceType.equals("PMQH") ) {
+//									str = str.concat(" dfltMagFld=\"" + getNumericString( rset.getString("PM_QUAD_STRENGTH") ) + "\"/>\n");
+//								} 
+//								else if ( deviceType.equals("PMQV") ) {
+//									str = str.concat(" dfltMagFld=\"" + getNumericString( rset.getString("PM_QUAD_STRENGTH") ) + "\"/>\n");
+//								}
+//							} else {
+//								str = str.concat(" dfltMagFld=\"" + getNumericString( rset.getString("SETTING_VALUE") ) + "\"/>\n");
+//							}
+							str = str.concat(" dfltMagFld=\"" + getNumericString( rset.getString("PM_QUAD_STRENGTH") ) + "\"/>\n");
 						} else {
+							/*
+							 * 添加二极铁特有的属性，包括pathlength，四级分量，各种角度等等。
+							 */
 							// for bending dipoles, we need to add extra attributes
 							if (rset.getString("DVC_TYPE_ID").equals("DH")
 									|| rset.getString("DVC_TYPE_ID").equals("DV")
 									|| rset.getString("DVC_TYPE_ID").equals("InjSptm")
 									|| rset.getString("DVC_TYPE_ID").equals("Sptm")
-									|| rset.getString("DVC_TYPE_ID").equals("ExSptm")) {
-								str = str.concat(" pathLength=\"" + rset.getString("PATH_LNGTH") + "\" dipoleQuadComponent=\""+ getNumericString( rset.getString("DIPOLE_QUAD_TERM") ) + "\"");
+									|| rset.getString("DVC_TYPE_ID").equals("ExjSptm")) {
+								str = str.concat(" pathLength=\"" + rset.getString("PATH_LENGTH") + "\" dipoleQuadComponent=\""+ getNumericString( rset.getString("DIPOLE_QUAD_TERM") ) + "\"");
 								// we need to reverse bend angle, etc. for Chicane in HEBT2 and IDmp-
-								if ( (sequences[k].equals("HEBT2") && deviceID.equals( "Ring_Mag:DH_A11" ) ) || (sequences[k].equals("IDmp-") && deviceID.equals("Ring_Mag:DH_A12")) )
-									str = str.concat(" bendAngle=\""
-										+ -1.0 * Double.parseDouble(rset.getString("DIPOLE_BEND_ANGLE"))
-										+ "\""
-										+ " dipoleEntrRotAngle=\""
-										+ -1.0 * Double.parseDouble(rset.getString("DIPOLE_ENTR_ROTATION_ANGLE"))
-										+ "\""
-										+ " dipoleExitRotAngle=\""
-										+ -1.0 * Double.parseDouble(rset.getString("DIPOLE_EXIT_ROTATION_ANGLE"))
-										+ "\"");
+								//应该这两个磁铁的电荷状态发生了改变？这一块用不到，先注释掉
+//								if ( (sequences[k].equals("HEBT2") && deviceID.equals( "Ring_Mag:DH_A11" ) ) || (sequences[k].equals("IDmp-") && deviceID.equals("Ring_Mag:DH_A12")) )
+//									str = str.concat(" bendAngle=\""
+//										+ -1.0 * Double.parseDouble(rset.getString("DIPOLE_BEND_ANGLE"))
+//										+ "\""
+//										+ " dipoleEntrRotAngle=\""
+//										+ -1.0 * Double.parseDouble(rset.getString("DIPOLE_ENTR_ROTATION_ANGLE"))
+//										+ "\""
+//										+ " dipoleExitRotAngle=\""
+//										+ -1.0 * Double.parseDouble(rset.getString("DIPOLE_EXIT_ROTATION_ANGLE"))
+//										+ "\"");
 								// other than the 2 middle Chicane dipoles
-								else
-									str = str.concat(" bendAngle=\"" + rset.getString("DIPOLE_BEND_ANGLE")
-										+ "\""
-										+ " dipoleEntrRotAngle=\""
-										+ getNumericString( rset.getString("DIPOLE_ENTR_ROTATION_ANGLE") )
-										+ "\""
-										+ " dipoleExitRotAngle=\""
-										+ getNumericString( rset.getString("DIPOLE_EXIT_ROTATION_ANGLE") )
-										+ "\"");
+//								else
+								str = str.concat(" bendAngle=\"" + rset.getString("DIPOLE_BEND_ANGLE")
+									+ "\""
+									+ " dipoleEntrRotAngle=\""
+									+ getNumericString( rset.getString("DIPOLE_ENTR_ROTATION_ANGLE") )
+									+ "\""
+									+ " dipoleExitRotAngle=\""
+									+ getNumericString( rset.getString("DIPOLE_EXIT_ROTATION_ANGLE") )
+									+ "\"");
 							}
 							str = str.concat(" dfltMagFld=\"" + getNumericString( rset.getString("SETTING_VALUE") ) + "\"/>\n");
 						}
 
+						/*
+						 * 下面设置alignment属性，即束线元件的准直误差属性
+						 */
 						// we use "zero" error for alignment for now
 						str = str
 								.concat("          <align x=\""
-										+ ( Double.parseDouble( rset.getString("DSGN_GLBL_COORD_X") ) - Double.parseDouble( rset.getString("DSGN_GLBL_COORD_X") ) )
+										+ ( Double.parseDouble( rset.getString("GLBL_COORD_X") ) - Double.parseDouble( rset.getString("GLBL_COORD_X") ) )
 										+ "\" y=\""
-										+ ( Double.parseDouble( rset.getString("DSGN_GLBL_COORD_Y") ) - Double.parseDouble( rset.getString("DSGN_GLBL_COORD_Y") ) )
+										+ ( Double.parseDouble( rset.getString("GLBL_COORD_Y") ) - Double.parseDouble( rset.getString("GLBL_COORD_Y") ) )
 										+ "\" z=\""
-										+ (Double.parseDouble(rset.getString("DSGN_GLBL_COORD_Z")) - Double.parseDouble(rset.getString("DSGN_GLBL_COORD_Z")))
+										+ (Double.parseDouble(rset.getString("GLBL_COORD_Z")) - Double.parseDouble(rset.getString("GLBL_COORD_Z")))
 										+ "\""
-										+ " pitch=\"" + rset.getString("DSGN_GLBL_COORD_PHI")
+										+ " pitch=\"" + rset.getString("GLBL_COORD_PITCH")
 										+ "\""
-										+ " yaw=\"" + rset.getString("DSGN_GLBL_COORD_PSI")
+										+ " yaw=\"" + rset.getString("GLBL_COORD_YAW")
 										+ "\""
-										+ " roll=\"" + rset.getString("DSGN_GLBL_COORD_THETA")
+										+ " roll=\"" + rset.getString("GLBL_COORD_ROLL")
 										+ "\"/>\n");
+						/*
+						 * 增加磁铁孔径
+						 */
 						// for magnet aperture
-						str = str.concat("          <aperture shape=\"0\" x=\"" + getNumericString( rset.getString("GAP") ) + "\"/>\n       </attributes>\n");
+						str = str.concat("          <aperture shape=\"0\" x=\"" + getNumericString( rset.getString("APERTURE_H") ) + "\"/>\n       </attributes>\n");
 						// dealing with the <channelsuite> tag for PMQs (no channelsuite)
 						if ( sequences[k].startsWith("DTL") ) {
-							// for non-PMQs
+							// for non-PMQs 非PQM，即所有的电磁铁增加电源ps属性和channel suite属性
 							if (!(rset.getString("DVC_TYPE_ID").equals("PMQH")) && !(rset.getString("DVC_TYPE_ID").equals("PMQV"))) {
 								// for power supply
 								str = str.concat("       <ps main=\"" + rset.getString("PARENT_DVC_ID") + "\"");
 								// has trim winding or shunt
-								final String relatedDevice = rset.getString( "RELATED_DVC" );
-								final String relatedDeviceRole = rset.getString( "FUNC_DVC_GRP_NM" );
-								if ( relatedDevice != null && relatedDeviceRole != null && ( relatedDeviceRole.equals("shunt") || relatedDeviceRole.equals("trim") ) ) {
-									str = str.concat(" trim=\"" + relatedDevice + "\"");
-								}
+//								final String relatedDevice = rset.getString( "RELATED_DVC" );
+//								final String relatedDeviceRole = rset.getString( "FUNC_DVC_GRP_NM" );
+//								if ( relatedDevice != null && relatedDeviceRole != null && ( relatedDeviceRole.equals("shunt") || relatedDeviceRole.equals("trim") ) ) {
+//									str = str.concat(" trim=\"" + relatedDevice + "\"");
+//								}
 								str = str.concat("/>\n");
 								// for read back PV
 								str += "       <channelsuite name=\"magnetsuite\">\n          <channel handle=\"fieldRB\"" + " signal=\"" + deviceID + ":B\" settable=\"false\"/>\n";
@@ -638,15 +703,16 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 							}
 							// for non-DTL sequences
 						} 
+						//所有DTL之外的电磁铁，设置PS和channel suite
 						else {
 							// for non-PMQ power supply
 							str = str.concat("       <ps main=\"" + rset.getString("PARENT_DVC_ID") + "\"");
 							// has trim winding
-							final String relatedDevice = rset.getString( "RELATED_DVC" );
-							final String relatedDeviceRole = rset.getString( "FUNC_DVC_GRP_NM" );
-							if ( relatedDevice != null && relatedDeviceRole != null && ( relatedDeviceRole.equals("shunt") || relatedDeviceRole.equals("trim") ) ) {
-								str = str.concat(" trim=\"" + relatedDevice + "\"");
-							}
+//							final String relatedDevice = rset.getString( "RELATED_DVC" );
+//							final String relatedDeviceRole = rset.getString( "FUNC_DVC_GRP_NM" );
+//							if ( relatedDevice != null && relatedDeviceRole != null && ( relatedDeviceRole.equals("shunt") || relatedDeviceRole.equals("trim") ) ) {
+//								str = str.concat(" trim=\"" + relatedDevice + "\"");
+//							}
 
 							str = str.concat("/>\n");
 							// for read back PV
@@ -654,18 +720,21 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 							str = str.concat("          <channel handle=\"" + "fieldRB" + "\"");
 							// inside the following "if" bracket is for
 							// temporary ring B readback
-							if ( ringLike ) {
-								if ( deviceID.indexOf("QTH") > 0) {
-									str = str.concat(" signal=\"" + deviceID.replaceAll("QTH", "QH") + ":B" + "\"" + " settable=\"false\"/>\n");
-								} 
-								else if ( deviceID.indexOf( "QTV" ) > 0 ) {
-									str = str.concat(" signal=\"" + deviceID.replaceAll("QTV", "QV") + ":B" + "\"" + " settable=\"false\"/>\n");
-								} 
-								else
-									str = str.concat(" signal=\"" + deviceID + ":B" + "\"" + " settable=\"false\"/>\n");
-							} 
-							else
-								str = str.concat(" signal=\"" + rset.getString("DVC_ID") + ":B" + "\"" + " settable=\"false\"/>\n");
+							
+							//先处理环上的QTH，对于XiPAF这一部分没有
+							//后续考虑将所有channel相关的信息，如handle，signal，settable从数据库channel表中获取
+//							if ( ringLike ) {
+//								if ( deviceID.indexOf("QTH") > 0) {
+//									str = str.concat(" signal=\"" + deviceID.replaceAll("QTH", "QH") + ":B" + "\"" + " settable=\"false\"/>\n");
+//								} 
+//								else if ( deviceID.indexOf( "QTV" ) > 0 ) {
+//									str = str.concat(" signal=\"" + deviceID.replaceAll("QTV", "QV") + ":B" + "\"" + " settable=\"false\"/>\n");
+//								} 
+//								else
+//									str = str.concat(" signal=\"" + deviceID + ":B" + "\"" + " settable=\"false\"/>\n");
+//							} 
+//							else
+							str = str.concat(" signal=\"" + rset.getString("DVC_ID") + ":B" + "\"" + " settable=\"false\"/>\n");
 						}
 						tmpID = deviceID;
 					}
@@ -678,51 +747,66 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 
 				str = queryRFQ(str, stmt, sequences, k);
 
-				final PreparedStatement SIGNAL_FETCH = conn.prepareStatement( "select sgnl_id, sgnl_nm from epics.sgnl_rec where dvc_id = ? order by sgnl_nm" );
-				
+//				final PreparedStatement SIGNAL_FETCH = conn.prepareStatement( "select sgnl_id, sgnl_nm from epics.sgnl_rec where dvc_id = ? order by sgnl_nm" );
+				/*
+				 * 从channel表格中获取元件所有PV signal信息的查询语句，针对XiPAF数据结构有效
+				 */
+				final PreparedStatement SIGNAL_FETCH = conn.prepareStatement( "select epics.dvc.dvc_id, "
+								+ "epics.channel.* "
+								+"from epics.dvc, "
+								+ "epics.channel "
+								+ "where epics.dvc.dvc_id = ? "
+								+ "and epics.dvc.dvc_type_id= epics.channel.dvc_type_id "
+								+ "order by epics.channel.signal" );
+				/*
+				 * 添加所有的束测信息，如BPM，BCM，BLM，WS等等
+				 */
 				// put diagnostic devices, vacuum windows, laser strippers and foil (they all act like markers) here
 				final String diagDeviceQuery = "SELECT EPICS.DVC.DVC_ID, "
 								+ "EPICS.DVC.SUBSYS_ID, "
-								+ "EPICS.DVC.ACT_DVC_IND, "
+//								+ "EPICS.DVC.ACT_DVC_IND, "//这一列不知道什么含义，先注释掉
 								+ "EPICS.DVC.DVC_TYPE_ID, "
-								+ "EPICS.DVC_DVC_TYPE_SFTW_ASSC.SFTW_ID, "
-								+ "EPICS.BEAM_LINE_DVC_LOC.DSGN_GLBL_COORD_X, "
-								+ "EPICS.BEAM_LINE_DVC_LOC.DSGN_GLBL_COORD_Y, "
-								+ "EPICS.BEAM_LINE_DVC_LOC.DSGN_GLBL_COORD_Z, "
-								+ "EPICS.BEAM_LINE_DVC_LOC.DSGN_GLBL_COORD_PHI, "
-								+ "EPICS.BEAM_LINE_DVC_LOC.DSGN_GLBL_COORD_PSI, "
-								+ "EPICS.BEAM_LINE_DVC_LOC.DSGN_GLBL_COORD_THETA, "
-								+ "EPICS.BEAM_LINE_DVC_LOC.DIST_FROM_STRT, "
-								+ "EPICS.BEAM_LINE_DVC_LOC.PHYS_LNGTH, "
-								+ "EPICS.BEAM_LINE_DVC_LOC.SEQ_NM, "
-								+ "EPICS.BEAM_LINE_DVC_LOC.DSGN_USAGE_IND, "
+//								+ "EPICS.DVC_DVC_TYPE_SFTW_ASSC.SFTW_ID, "//软件版本，后续再加上这个信息
+								+ "EPICS.BEAM_LINE_DVC.GLBL_COORD_X, "
+								+ "EPICS.BEAM_LINE_DVC.GLBL_COORD_Y, "
+								+ "EPICS.BEAM_LINE_DVC.GLBL_COORD_Z, "
+								+ "EPICS.BEAM_LINE_DVC.GLBL_COORD_PITCH, "
+								+ "EPICS.BEAM_LINE_DVC.GLBL_COORD_YAW, "
+								+ "EPICS.BEAM_LINE_DVC.GLBL_COORD_ROLL, "
+								+ "EPICS.BEAM_LINE_DVC.DIST_FROM_START, "
+								+ "EPICS.BEAM_LINE_DVC.PHYS_LENGTH, "
+								+ "EPICS.BEAM_LINE_DVC.SEQ_NM, "
+								+ "EPICS.BEAM_LINE_DVC.DSGN_USAGE_IND, "
 								+ "EPICS.BPM_DVC.FREQ, "
-								+ "EPICS.BPM_DVC.ELCTD_LNGTH, "
+								+ "EPICS.BPM_DVC.ELCTD_LENGTH, "
 								+ "EPICS.BPM_DVC.ORIENT_IND "
-								+ "FROM EPICS.DVC, "
-								+ "EPICS.DVC_DVC_TYPE_SFTW_ASSC, "
-								+ "EPICS.BEAM_LINE_DVC_LOC, "
-								+ "EPICS.BPM_DVC "
+								+ "FROM EPICS.DVC "
+//								+ "EPICS.DVC_DVC_TYPE_SFTW_ASSC, "
+								+ "INNER JOIN EPICS.BEAM_LINE_DVC ON EPICS.DVC.Dvc_id = EPICS.BEAM_LINE_DVC.Dvc_id "//这里用INNER JOIN比较好些
+								+ "LEFT JOIN EPICS.BPM_DVC ON EPICS.DVC.Dvc_id = EPICS.BPM_DVC.Dvc_id "
 								+ "where (EPICS.DVC.DVC_TYPE_ID IN "
-								+ "( 'BPM','BCM', 'BLM', 'BSM', 'ChMPS', 'EMS', 'LW', 'WS', 'ND', 'Harp', 'Foil', 'LStrp', 'VIW', 'Tgt' )) "
-								+ "and EPICS.DVC.ACT_DVC_IND = 'Y' "
-								+ "and EPICS.BEAM_LINE_DVC_LOC.SEQ_NM = '" + sequences[k] + "' "
-								+ "and EPICS.DVC.Dvc_id = EPICS.BEAM_LINE_DVC_LOC.Dvc_id(+) "
-								+ "and EPICS.DVC.Dvc_id = EPICS.BPM_DVC.Dvc_id(+) "
-								+ "and EPICS.DVC.Dvc_id = EPICS.DVC_DVC_TYPE_SFTW_ASSC.DVC_ID(+) "
+								+ "( 'BPM','BCM', 'BLM', 'BSM', 'ChMPS', 'EMS', 'LW', 'WS', 'ND', 'Harp', 'Foil', 'LStrp', 'VIW', 'Tgt', 'BPRM', 'IC', 'DEG', 'Slit' )) "//增加类型：BPRM(PIC)，IC，DEG(marker)，Slit(marker)
+//								+ "and EPICS.DVC.ACT_DVC_IND = 'Y' "
+								+ "and EPICS.BEAM_LINE_DVC.SEQ_NM = '" + sequences[k] + "' "
+//								+ "and EPICS.DVC.Dvc_id = EPICS.BEAM_LINE_DVC.Dvc_id(+) "//这里(+)在等号右边表示是左连接
+//								+ "and EPICS.DVC.Dvc_id = EPICS.BPM_DVC.Dvc_id(+) "//MySQL不支持左连接
+								//这里使用左连接的目的就是为了列出所有的诊断设备，而不仅仅是BPM元件，因为其他的束测元件只有node的一般信息
+								//没有单独的表格存放信息
+								//元件的软件版本信息后续再加上
+//								+ "and EPICS.DVC.Dvc_id = EPICS.DVC_DVC_TYPE_SFTW_ASSC.DVC_ID(+) "
 								+ "order by "
-								+ "EPICS.BEAM_LINE_DVC_LOC.Dist_From_Strt, EPICS.DVC.DVC_ID";
+								+ "EPICS.BEAM_LINE_DVC.Dist_From_Start, EPICS.DVC.DVC_ID";
 				
 				System.out.println( "Diag Device Query: " + diagDeviceQuery );
 				rset = stmt.executeQuery( diagDeviceQuery );
 				while ( rset.next() ) {
 					final String deviceID = rset.getString( "DVC_ID" );
-					final String softType = rset.getString( "SFTW_ID" );
+//					final String softType = rset.getString( "SFTW_ID" );
 					final String deviceType = rset.getString( "DVC_TYPE_ID" );
 					System.out.println( deviceID );
-					if ( softType != null ) {
-						System.out.println( "************************ Soft Type:  >>>" + softType + "<<< ****************************" );
-					}
+//					if ( softType != null ) {
+//						System.out.println( "************************ Soft Type:  >>>" + softType + "<<< ****************************" );
+//					}
 
 					// check if the previous device has a closed </node>
 					if (!(deviceID.equals(tmpID)) && !(tmpID == null)) {
@@ -733,34 +817,40 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 					}
 
 					if ( !deviceID.equals( tmpID ) ) {
-						final String devicePosition = rset.getString( "DIST_FROM_STRT" );
-						final String deviceLength = getNumericString( rset.getString("PHYS_LNGTH") );
+						final String devicePosition = rset.getString( "DIST_FROM_START" );
+						final String deviceLength = getNumericString( rset.getString("PHYS_LENGTH") );
 						final boolean deviceStatus = rset.getString("DSGN_USAGE_IND").equals("Y");
-						final boolean ringLike = sequences[k].substring(0, 4).equals("Ring") || sequences[k].substring(0, 4).equals("RTBT") || sequences[k].equals("IDmp+") || sequences[k].equals("EDmp");
+						final boolean ringLike = sequences[k].equals("RING1") || sequences[k].equals("RING2") || sequences[k].startsWith("T") || sequences[k].equals("HDmp") || sequences[k].equals("HEBT");
 						
-						if ( ringLike && deviceType.equals("BPM") ) {
+						if ( ringLike && deviceType.equals("BPM") ) {//环上的BPM类型叫“RBPM”
 							str += "    <node type=\"R" + deviceType + "\" id=\"" + deviceID + "\"" + " pos=\"" + devicePosition + "\"" + " len=\"" + deviceLength + "\"";
 							str += " status=\"" + deviceStatus + "\">\n";
 						} 
 						else {
 							str += "    <node type=\"" + deviceType + "\"";
-							if ( softType != null ) {
-								str += " softType=\"" + softType + "\"";
+//							if ( softType != null ) {
+//								str += " softType=\"" + softType + "\"";
+//							}
+							if (deviceType.equals("WS")){//加上WS的版本号
+								str += " softType=\"" + "Version 2.0.0" + "\"";
 							}
 							str += " id=\"" + deviceID + "\" pos=\"" + devicePosition + "\"";
 							str += " len=\"" + deviceLength + "\" status=\"" + deviceStatus + "\">\n";
 						}
+						
+						//添加束测元件的attribute属性，这里只有准直误差信息
 						str = str.concat("       <attributes>\n");
 						// we use "zero" error for alignment for now
-						str = str.concat("          <align x=\"" + (Double.parseDouble(rset.getString("DSGN_GLBL_COORD_X")) - Double.parseDouble(rset.getString("DSGN_GLBL_COORD_X"))) + "\""
-							+ " y=\"" + (Double.parseDouble(rset.getString("DSGN_GLBL_COORD_Y")) - Double.parseDouble(rset.getString("DSGN_GLBL_COORD_Y"))) + "\""
-							+ " z=\"" + (Double.parseDouble(rset.getString("DSGN_GLBL_COORD_Z")) - Double.parseDouble(rset.getString("DSGN_GLBL_COORD_Z"))) + "\""
-							+ " pitch=\"" + rset.getString("DSGN_GLBL_COORD_PHI") + "\""
-							+ " yaw=\"" + rset.getString("DSGN_GLBL_COORD_PSI") + "\""
-							+ " roll=\"" + rset.getString("DSGN_GLBL_COORD_THETA") + "\"/>\n");
+						str = str.concat("          <align x=\"" + (Double.parseDouble(rset.getString("GLBL_COORD_X")) - Double.parseDouble(rset.getString("GLBL_COORD_X"))) + "\""
+							+ " y=\"" + (Double.parseDouble(rset.getString("GLBL_COORD_Y")) - Double.parseDouble(rset.getString("GLBL_COORD_Y"))) + "\""
+							+ " z=\"" + (Double.parseDouble(rset.getString("GLBL_COORD_Z")) - Double.parseDouble(rset.getString("GLBL_COORD_Z"))) + "\""
+							+ " pitch=\"" + rset.getString("GLBL_COORD_PITCH") + "\""
+							+ " yaw=\"" + rset.getString("GLBL_COORD_YAW") + "\""
+							+ " roll=\"" + rset.getString("GLBL_COORD_ROLL") + "\"/>\n");
+						//添加BPM额外的信息，BPM bracket
 						if ( deviceType.equals("BPM") ) {
 							str = str.concat("          <bpm frequency=\"" + Double.parseDouble(rset.getString("FREQ")) + "\"\n"
-											+ "               length=\"" + Double.parseDouble(rset.getString("ELCTD_LNGTH")) + "\"\n");
+											+ "               length=\"" + Double.parseDouble(rset.getString("ELCTD_LENGTH")) + "\"\n");
 							if (rset.getString("ORIENT_IND").equals("U"))
 								str = str.concat("               orientation=\"" + "-1\"/>\n");
 							else if (rset.getString("ORIENT_IND").equals("D"))
@@ -769,431 +859,47 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 								str = str.concat("/>\n");
 						}
 						str = str + "       </attributes>\n";
-
-						if ( deviceType.equals("BPM") ) {
-							str = str.concat("       <channelsuite name=\"bpmsuite\">\n"
-									+ "          <channel handle=\"" + "xAvg" + "\"" + " signal=\"" + deviceID + ":xAvg" + "\" settable=\"false\"/>\n"
-									+ "          <channel handle=\"" + "yAvg" + "\"" + " signal=\"" + deviceID + ":yAvg" + "\" settable=\"false\"/>\n"
-									+ "          <channel handle=\"xTBT\"" + " signal=\"");
-							str += deviceID + ( ringLike ? ":xTBT" : ":hposA" );
-							str = str.concat("\" settable=\"false\"/>\n          <channel handle=\"yTBT\" signal=\"");
-							str += deviceID + ( ringLike ? ":yTBT" : ":vposA" );
-							str = str.concat("\"" + " settable=\"false\"/>\n");
-
-							if ( ringLike ) {
-								str = str.concat("          <channel handle=\"Stage1Len\" signal=\"" + deviceID + ":Stage1Turns\" settable=\"true\"/>\n"
-										+ "          <channel handle=\"Stage1Gain\" signal=\"" + deviceID + ":Stage1Gain\" settable=\"true\"/>\n"
-										+ "          <channel handle=\"Stage1Method\" signal=\"" + deviceID + ":Analysis_Type1\" settable=\"true\"/>\n"
-										+ "          <channel handle=\"Stage2Len\" signal=\"" + deviceID + ":Stage2Turns\" settable=\"true\"/>\n"
-										+ "          <channel handle=\"Stage2Gain\" signal=\"" + deviceID + ":Stage2Gain\" settable=\"true\"/>\n"
-										+ "          <channel handle=\"Stage2Method\" signal=\"" + deviceID + ":Analysis_Type2\" settable=\"true\"/>\n"
-										+ "          <channel handle=\"Stage3Len\" signal=\"" + deviceID + ":Stage3Turns\" settable=\"true\"/>\n"
-										+ "          <channel handle=\"Stage3Gain\" signal=\"" + deviceID + ":Stage3Gain\" settable=\"true\"/>\n"
-										+ "          <channel handle=\"Stage3Method\" signal=\"" + deviceID + ":Analysis_Type3\" settable=\"true\"/>\n"
-										+ "          <channel handle=\"Stage4Len\" signal=\"" + deviceID + ":Stage4Turns\" settable=\"true\"/>\n"
-										+ "          <channel handle=\"Stage4Gain\" signal=\"" + deviceID + ":Stage4Gain\" settable=\"true\"/>\n"
-										+ "          <channel handle=\"Stage4Method\" signal=\"" + deviceID + ":Analysis_Type4\" settable=\"true\"/>\n"
-										+ "          <channel handle=\"ampTBT\" signal=\"" + deviceID + ":ampTBT\" settable=\"false\"/>\n");
-								str = str.concat("          <channel handle=\"Stage1LenRB\" signal=\""+ deviceID + ":Stage1Turns_RB\" settable=\"false\"/>\n"
-										+ "          <channel handle=\"Stage1GainRB\" signal=\"" + deviceID + ":Stage1Gain_RB\" settable=\"false\"/>\n"
-										+ "          <channel handle=\"Stage1MethodRB\" signal=\"" + deviceID + ":Analysis_Type1_RB\" settable=\"false\"/>\n"
-										+ "          <channel handle=\"Stage2LenRB\" signal=\"" + deviceID + ":Stage2Turns_RB\" settable=\"false\"/>\n"
-										+ "          <channel handle=\"Stage2GainRB\" signal=\"" + deviceID + ":Stage2Gain_RB\" settable=\"false\"/>\n"
-										+ "          <channel handle=\"Stage2MethodRB\" signal=\"" + deviceID + ":Analysis_Type2_RB\" settable=\"false\"/>\n"
-										+ "          <channel handle=\"Stage3LenRB\" signal=\"" + deviceID + ":Stage3Turns_RB\" settable=\"false\"/>\n"
-										+ "          <channel handle=\"Stage3GainRB\" signal=\"" + deviceID + ":Stage3Gain_RB\" settable=\"false\"/>\n"
-										+ "          <channel handle=\"Stage3MethodRB\" signal=\"" + deviceID + ":Analysis_Type3_RB\" settable=\"false\"/>\n"
-										+ "          <channel handle=\"Stage4LenRB\" signal=\"" + deviceID + ":Stage4Turns_RB\" settable=\"false\"/>\n"
-										+ "          <channel handle=\"Stage4GainRB\" signal=\"" + deviceID + ":Stage4Gain_RB\" settable=\"false\"/>\n"
-										+ "          <channel handle=\"Stage4MethodRB\" signal=\"" + deviceID + ":Analysis_Type4_RB\" settable=\"false\"/>\n"
-										+ "          <channel handle=\"amplitudeAvg\" signal=\"" + deviceID + ":ampAvg\" settable=\"false\"/>\n");
-							} 
-							else
-								str = str.concat("          <channel handle=\"phaseAvg\" signal=\"" + deviceID + ":phaseAvg\" settable=\"false\"/>\n"
-										+ "          <channel handle=\"amplitudeAvg\" signal=\"" + deviceID + ":amplitudeAvg\" settable=\"false\"/>\n"
-										+ "          <channel handle=\"ampTBT\" signal=\"" + deviceID + ":beamIA\" settable=\"false\"/>\n"
-										+ "          <channel handle=\"phaseTBT\" signal=\"" + deviceID + ":beamPA\" settable=\"false\"/>\n");
-
+						
+						
+						
+						//下面添加channelsuite属性，分别对不同类型的束测元件逐一添加信息
+						//可以考虑增加RBPM类型，以区分环上BPM和输运线BPM，因为这两种类型的channelsuite还不一样
+						if (deviceType.equals("BPM") || deviceType.equals("RBPM")) {
+							str = str + "       <channelsuite name=\"bpmsuite\">\n";
+							Map<String,List<String>> signalTable=fetchChannels( SIGNAL_FETCH, deviceID );
+							str +=channelEntry(signalTable);
 							chSuiteTag = true;
-						} 
-						else if ( deviceType.equals("BCM") ) {
-							str = str.concat("       <channelsuite name=\"bcmsuite\">\n" 
-									+ "          <channel handle=\"Particles\" signal=\"" + deviceID + ":Particles\" settable=\"false\"/>\n"
-									+ "          <channel handle=\"currentTBT\" signal=\"" + deviceID + ":currentTBT\" settable=\"false\"/>\n"
-									+ "          <channel handle=\"tDelay\" signal=\"" + deviceID + ":tAvgDelay\" settable=\"false\"/>\n"
-									+ "          <channel handle=\"DisplayLength\" signal=\"" + deviceID + ":tLength\" settable=\"false\"/>\n"
-									+ "          <channel handle=\"currentAvg\" signal=\"" + deviceID + ":currentAvg\" settable=\"false\"/>\n"
-									+ "          <channel handle=\"currentMax\" signal=\"" + deviceID + ":currentMax\" settable=\"false\"/>\n");
-
+						}else if (deviceType.equals("BCM")) {
+							str = str + "       <channelsuite name=\"bcmsuite\">\n";
+							Map<String,List<String>> signalTable=fetchChannels( SIGNAL_FETCH, deviceID );
+							str +=channelEntry(signalTable);
 							chSuiteTag = true;
-						} 
-						else if ( deviceType.equals( "BLM" ) ) {
-							final Map<String,String> signalTable = fetchSignals( SIGNAL_FETCH, deviceID );
+						}else if (deviceType.equals("BLM")) {
 							str = str + "       <channelsuite name=\"blmsuite\">\n";
-							str += channelEntry( "lossAvg", "Slow1PulseBeamOnTotalLoss", signalTable, false );
-							str += channelEntry( "lossTBT", "Fast1PulseBeamOnLoss", signalTable, false );
-							str += channelEntry( "lossInt", "Slow60PulsesTotalLoss", signalTable, false );							
+							Map<String,List<String>> signalTable=fetchChannels( SIGNAL_FETCH, deviceID );
+							str +=channelEntry(signalTable);
 							chSuiteTag = true;
-						} 
-						else if ( deviceType.equals( "ChMPS" ) ) {
-							final Map<String,String> signalTable = fetchSignals( SIGNAL_FETCH, deviceID );
-							str = str + "       <channelsuite name=\"chumpssuite\">\n";
-							str += channelEntry( "BeamOn", "BeamOn", signalTable, false );
-							str += channelEntry( "BeamInGap", "BeamInGap", signalTable, false );
-							str += channelEntry( "waveform", "wf", signalTable, false );
+						}else if (deviceType.equals("WS")) {
+							str = str + "       <channelsuite name=\"wssuite\">\n";
+							Map<String,List<String>> signalTable=fetchChannels( SIGNAL_FETCH, deviceID );
+							str +=channelEntry(signalTable);
 							chSuiteTag = true;
-						} 
-						else if ( rset.getString( "DVC_TYPE_ID" ).equals( "LW" ) ) {
-							chSuiteTag = false;
-						} 
-						else if ( deviceType.equals( "WS" ) ) {
-							final Map<String,String> signalTable = fetchSignals( SIGNAL_FETCH, deviceID );
-							str += "       <channelsuite name=\"wssuite\">\n";
-							
-							if ( softType != null && softType.toLowerCase().contains( "version 2.0.0" ) ) {
-								str += channelEntry( "Command", "Command", signalTable, true );
-								str += channelEntry( "CommandResult", "CommandResult", signalTable, false );
-								str += channelEntry( "CommandStatus", "Status", signalTable, false );
-								
-								str += channelEntry( "StatCollisionRb", "Collision", signalTable, false );
-								str += channelEntry( "StatFwdLimitRb", "Forward", signalTable, false );
-								str += channelEntry( "StatRevLimitRb", "Reverse", signalTable, false );
-								str += channelEntry( "StatScanOutOfRngRb", "Scan_OOR", signalTable, false );
-								str += channelEntry( "StatHorWireDmgRb", "Hor_Cont", signalTable, false );
-								str += channelEntry( "StatVerWireDmgRb", "Ver_Cont", signalTable, false );
-								str += channelEntry( "StatDiaWireDmgRb", "Diag_Cont", signalTable, false );
-								str += channelEntry( "StatAlarmSgnlRb", "SignalAlarm", signalTable, false);
-								str += channelEntry( "StatAlarmTmgRb", "TimingAlarm", signalTable, false);
-								str += channelEntry( "StatMps0Rb", "MPS0", signalTable, false );
-								str += channelEntry( "StatMps1Rb", "MPS1", signalTable, false );
-								str += channelEntry( "StatWirePosRb", "Position", signalTable, false );
-								str += channelEntry( "StatPowerSupplyRb", "Power", signalTable, false );
-								str += channelEntry( "StatWireSpeedRb", "Speed", signalTable, false );
-								str += channelEntry( "StatScanErrorRb", "ScanErr", signalTable, false );
-								str += channelEntry( "StatMotionRb", "MotionStat", signalTable, false );
-								str += channelEntry( "StatScanSeqIdRb", "Sequence", signalTable, false );
-								str += channelEntry( "StatScanStrokeRb", "Stroke", signalTable, false);
-								
-								str += channelEntry( "ScanMotionRb", "MotionStat", signalTable, false );
-								str += channelEntry( "ScanPositionRb", "Position", signalTable, false );
-								str += channelEntry( "ScanSpeedRb", "Speed", signalTable, false );
-								str += channelEntry( "ScanRevLimitRb", "Reverse", signalTable, false );
-								str += channelEntry( "ScanForLimitRb", "Forward", signalTable, false );
-								str += channelEntry( "ScanSeqIdRb", "Sequence", signalTable, false );
-								str += channelEntry( "ScanErrorRb", "ScanErr", signalTable, false );
-								str += channelEntry( "ScanCfgInitPosRb", "Scan_InitialMove_rb", signalTable, false );
-								str += channelEntry( "ScanCfgInitPosSet", "Scan_InitialMove_set", signalTable, true );
-								str += channelEntry( "ScanCfgStepCntRb", "Scan_Steps_rb", signalTable, false );
-								str += channelEntry( "ScanCfgStepCntSet", "Scan_Steps_set", signalTable, true );
-								str += channelEntry( "ScanCfgStepLngRb", "Scan_StepSize_rb", signalTable, false );
-								str += channelEntry( "ScanCfgStepLngSet", "Scan_StepSize_set", signalTable, true );
-								str += channelEntry( "ScanCfgStepPulsesRb", "Scan_Traces/step_rb", signalTable, false );
-								str += channelEntry( "ScanCfgStepPulsesSet", "Scan_Traces/step_set", signalTable, true );
-                                str += channelEntry( "ScanCfgStrokeLngRb", "Stroke", signalTable, false);
-                                str += channelEntry( "ScanCfgScanLngRb",   "Scan_Length", signalTable, false);
-                                str += channelEntry( "ScanCfgScanOutOfRngRb", "Scan_OOR", signalTable, false);
-								
-								str += channelEntry( "ActrCfgInitSpeedRb", "Motion_Speed_Init_rb", signalTable, false );
-								str += channelEntry( "ActrCfgInitSpeedSet", "Motion_Speed_Init_set", signalTable, true );
-								str += channelEntry( "ActrCfgInitAccelRb", "Motion_Accel_Init_rb", signalTable, false );
-								str += channelEntry( "ActrCfgInitAccelSet", "Motion_Accel_Init_set", signalTable, true );
-								str += channelEntry( "ActrCfgStepSpeedRb", "Motion_Speed_Step_rb", signalTable, false );
-								str += channelEntry( "ActrCfgStepSpeedSet", "Motion_Speed_Step_set", signalTable, true );
-								str += channelEntry( "ActrCfgStepAccelRb", "Motion_Accel_Step_rb", signalTable, false );
-								str += channelEntry( "ActrCfgStepAccelSet", "Motion_Accel_Step_set", signalTable, true );
-								str += channelEntry( "ActrCfgSearchSpeedRb", "Motion_Speed_Search_rb", signalTable, false );
-								str += channelEntry( "ActrCfgSearchSpeedSet", "Motion_Speed_Search_set", signalTable, true );
-								str += channelEntry( "ActrCfgSearchAccelRb", "Motion_Accel_Search_rb", signalTable, false );
-								str += channelEntry( "ActrCfgSearchAccelSet", "Motion_Accel_Search_set", signalTable, true );
-								str += channelEntry( "ActrCfgReturnSpeedRb", "Motion_Speed_Return_rb", signalTable, false );
-								str += channelEntry( "ActrCfgReturnSpeedSet", "Motion_Speed_Return_set", signalTable, true );
-								str += channelEntry( "ActrCfgReturnAccelRb", "Motion_Accel_Return_rb", signalTable, false );
-								str += channelEntry( "ActrCfgReturnAccelSet", "Motion_Accel_Return_set", signalTable, true );
-								str += channelEntry( "ActrCfgSearchTimeoutRb", "Motion_TMO_Search_rb", signalTable, false );
-								str += channelEntry( "ActrCfgSearchTimeoutSet", "Motion_TMO_Search_set", signalTable, true );
-								str += channelEntry( "ActrCfgStepTimeoutRb", "Motion_TMO_Step_rb", signalTable, false );
-								str += channelEntry( "ActrCfgStepTimeoutSet", "Motion_TMO_Step_set", signalTable, true );
-								
-								str += channelEntry( "DaqCfgScanRateRb", "Acq_Scanrate_rb", signalTable, false );
-								str += channelEntry( "DaqCfgScanRateSet", "Acq_Scanrate_set", signalTable, true );
-								str += channelEntry( "DaqCfgGainRb", "Acq_Gain_rb", signalTable, false );
-								str += channelEntry( "DaqCfgGainSet", "Acq_Gain_set", signalTable, true );
-								str += channelEntry( "DaqCfgWindowRb", "Acq_Length_rb", signalTable, false );
-								str += channelEntry( "DaqCfgWindowSet", "Acq_Length_set", signalTable, true );
-								str += channelEntry( "DaqCfgTimeoutRb", "Acq_Time-out_rb", signalTable, false );
-								str += channelEntry( "DaqCfgTimeoutSet", "Acq_Time-out_set", signalTable, true );
-								
-								str += channelEntry( "PrcgCfgInvertRb", "Analysis_Gain_rb", signalTable, false );
-								str += channelEntry( "PrcgCfgInvertSet", "Analysis_Gain_set", signalTable, true );
-								str += channelEntry( "PrcgCfgAvgBeginRb", "Analysis_Avg_Start_rb", signalTable, false );
-								str += channelEntry( "PrcgCfgAvgBeginSet", "Analysis_Avg_Start_set", signalTable, true );
-								str += channelEntry( "PrcgCfgAvgLengthRb", "Analysis_Avg_Len_rb", signalTable, false );
-								str += channelEntry( "PrcgCfgAvgLengthSet", "Analysis_Avg_Len_set", signalTable, true );
-								
-								// We may need to eliminate these signals and, consequently, remove
-								//  them from PTA
-								str += channelEntry( "TrgCfgDelayRb", "Delay00_Rb", signalTable, true );
-								str += channelEntry( "TrgCfgDelaySet", "Delay00", signalTable, true );
-								str += channelEntry( "TrgCfgTrigEventRb", "Event00_Rb", signalTable, true );
-								str += channelEntry( "TrgCfgTrigEventSet", "Event00", signalTable, true );
-								
-								str += channelEntry( "DatDiaLivePtPositions", "Diag_point_pos", signalTable, false );
-								str += channelEntry( "DatHorLivePtPositions", "Hor_point_pos", signalTable, false );
-								str += channelEntry( "DatVerLivePtPositions", "Ver_point_pos", signalTable, false );
-								str += channelEntry( "DatDiaLivePtSignal", "Diag_point_sig", signalTable, false );
-								str += channelEntry( "DatHorLivePtSignal", "Hor_point_sig", signalTable, false );
-								str += channelEntry( "DatVerLivePtSignal", "Ver_point_sig", signalTable, false );
-								
-                                str += channelEntry( "DatDiaLiveArrPositions", "Diag_live_pos", signalTable, false );
-                                str += channelEntry( "DatHorLiveArrPositions", "Hor_live_pos", signalTable, false );
-                                str += channelEntry( "DatVerLiveArrPositions", "Ver_live_pos", signalTable, false );
-                                str += channelEntry( "DatDiaLiveArrSignal", "Diag_live_sig", signalTable, false );
-                                str += channelEntry( "DatHorLiveArrSignal", "Hor_live_sig", signalTable, false );
-                                str += channelEntry( "DatVerLiveArrSignal", "Ver_live_sig", signalTable, false );
-                                
-								str += channelEntry( "DatDiaRawPositions", "Diag_prof_pos", signalTable, false );
-								str += channelEntry( "DatHorRawPositions", "Hor_prof_pos", signalTable, false );
-								str += channelEntry( "DatVerRawPositions", "Ver_prof_pos", signalTable, false );
-								str += channelEntry( "DatDiaRawSignal", "Diag_prof_sig", signalTable, false );
-								str += channelEntry( "DatHorRawSignal", "Hor_prof_sig", signalTable, false );
-								str += channelEntry( "DatVerRawSignal", "Ver_prof_sig", signalTable, false );
-								
-								str += channelEntry( "DatDiaFitPositions", "Diag_prof_pos", signalTable, false );
-								str += channelEntry( "DatHorFitPositions", "Hor_prof_pos", signalTable, false );
-								str += channelEntry( "DatVerFitPositions", "Ver_prof_pos", signalTable, false );
-								str += channelEntry( "DatDiaFitSignal", "Diag_prof_fit", signalTable, false );
-								str += channelEntry( "DatHorFitSignal", "Hor_prof_fit", signalTable, false );
-								str += channelEntry( "DatVerFitSignal", "Ver_prof_fit", signalTable, false );
-
-								str += channelEntry( "DatTraceTimeStep", "trace_dt", signalTable, false );
-                                str += channelEntry( "DatDiaTracePositions", "trace_x", signalTable, false );
-                                str += channelEntry( "DatHorTracePositions", "trace_x", signalTable, false );
-                                str += channelEntry( "DatVerTracePositions", "trace_x", signalTable, false );
-                                str += channelEntry( "DatDiaTraceSignal", "Diag_trace_raw", signalTable, false );
-                                str += channelEntry( "DatHorTraceSignal", "Hor_trace_raw", signalTable, false );
-                                str += channelEntry( "DatVerTraceSignal", "Ver_trace_raw", signalTable, false );
-								
-								str += channelEntry( "DatHorNoiseAvg", "Hor_noise_mean", signalTable, false);
-                                str += channelEntry( "DatHorNoiseStd", "Hor_noise_std", signalTable, false);
-                                str += channelEntry( "DatVerNoiseAvg", "Ver_noise_mean", signalTable, false);
-                                str += channelEntry( "DatVerNoiseStd", "Ver_noise_std", signalTable, false);
-                                str += channelEntry( "DatDiaNoiseAvg", "Diag_noise_mean", signalTable, false);
-                                str += channelEntry( "DatDiaNoiseStd", "Diag_noise_std", signalTable, false);
-								
-								str += channelEntry( "SigHorStatAmp", "Hor_Amp_rms", signalTable, false );
-								str += channelEntry( "SigVerStatAmp", "Ver_Amp_rms", signalTable, false );
-								str += channelEntry( "SigDiaStatAmp", "Diag_Amp_rms", signalTable, false );
-								str += channelEntry( "SigHorStatOffset", "Hor_Offset_rms", signalTable, false );
-								str += channelEntry( "SigVerStatOffset", "Ver_Offset_rms", signalTable, false );
-								str += channelEntry( "SigDiaStatOffset", "Diag_Offset_rms", signalTable, false );
-								str += channelEntry( "SigHorStatArea", "Hor_Area_rms", signalTable, false );
-								str += channelEntry( "SigVerStatArea", "Ver_Area_rms", signalTable, false );
-								str += channelEntry( "SigDiaStatArea", "Diag_Area_rms", signalTable, false );
-								str += channelEntry( "SigHorStatMean", "Hor_Mean_rms", signalTable, false );
-								str += channelEntry( "SigVerStatMean", "Ver_Mean_rms", signalTable, false );
-								str += channelEntry( "SigDiaStatMean", "Diag_Mean_rms", signalTable, false );
-								str += channelEntry( "SigHorStatStd", "Hor_Sigma_rms", signalTable, false );
-								str += channelEntry( "SigVerStatStd", "Ver_Sigma_rms", signalTable, false );
-								str += channelEntry( "SigDiaStatStd", "Diag_Sigma_rms", signalTable, false );
-								str += channelEntry( "SigHorGaussAmp", "Hor_Amp_gs", signalTable, false );
-								str += channelEntry( "SigVerGaussAmp", "Ver_Amp_gs", signalTable, false );
-								str += channelEntry( "SigDiaGaussAmp", "Diag_Amp_gs", signalTable, false );
-								str += channelEntry( "SigHorGaussOffset", "Hor_Offset_gs", signalTable, false );
-								str += channelEntry( "SigVerGaussOffset", "Ver_Offset_gs", signalTable, false );
-								str += channelEntry( "SigDiaGaussOffset", "Diag_Offset_gs", signalTable, false );
-								str += channelEntry( "SigHorGaussArea", "Hor_Area_gs", signalTable, false );
-								str += channelEntry( "SigVerGaussArea", "Ver_Area_gs", signalTable, false );
-								str += channelEntry( "SigDiaGaussArea", "Diag_Area_gs", signalTable, false );
-								str += channelEntry( "SigHorGaussMean", "Hor_Mean_gs", signalTable, false );
-								str += channelEntry( "SigVerGaussMean", "Ver_Mean_gs", signalTable, false );
-								str += channelEntry( "SigDiaGaussMean", "Diag_Mean_gs", signalTable, false );
-								str += channelEntry( "SigHorGaussStd", "Hor_Sigma_gs", signalTable, false );
-								str += channelEntry( "SigVerGaussStd", "Ver_Sigma_gs", signalTable, false );
-								str += channelEntry( "SigDiaGaussStd", "Diag_Sigma_gs", signalTable, false );
-								str += channelEntry( "SigHorDblGaussAmp", "Hor_Amp_dgs", signalTable, false );
-								str += channelEntry( "SigVerDblGaussAmp", "Ver_Amp_dgs", signalTable, false );
-								str += channelEntry( "SigDiaDblGaussAmp", "Diag_Amp_dgs", signalTable, false );
-								str += channelEntry( "SigHorDblGaussOffset", "Hor_Offset_dgs", signalTable, false );
-								str += channelEntry( "SigVerDblGaussOffset", "Ver_Offset_dgs", signalTable, false );
-								str += channelEntry( "SigDiaDblGaussOffset", "Diag_Offset_dgs", signalTable, false );
-								str += channelEntry( "SigHorDblGaussArea", "Hor_Area_dgs", signalTable, false );
-								str += channelEntry( "SigVerDblGaussArea", "Ver_Area_dgs", signalTable, false );
-								str += channelEntry( "SigDiaDblGaussArea", "Diag_Area_dgs", signalTable, false );
-								str += channelEntry( "SigHorDblGaussMean", "Hor_Mean_dgs", signalTable, false );
-								str += channelEntry( "SigVerDblGaussMean", "Ver_Mean_dgs", signalTable, false );
-								str += channelEntry( "SigDiaDblGaussMean", "Diag_Mean_dgs", signalTable, false );
-								str += channelEntry( "SigHorDblGaussStd", "Hor_Sigma_dgs", signalTable, false );
-								str += channelEntry( "SigVerDblGaussStd", "Ver_Sigma_dgs", signalTable, false );
-								str += channelEntry( "SigDiaDblGaussStd", "Diag_Sigma_dgs", signalTable, false );
-							}
-							else {
-								str += channelEntry( "position", "Pos", signalTable, false );
-								str += channelEntry( "statusArray", "StatArray", signalTable, false );
-								str += channelEntry( "abortScan", "AbortScan", signalTable, true );
-								str += channelEntry( "vDataArray", "XRaw", signalTable, false );
-								str += channelEntry( "dDataArray", "YRaw", signalTable, false );
-								str += channelEntry( "hDataArray", "ZRaw", signalTable, false );
-								str += channelEntry( "positionArray", "PosArray", signalTable, false );
-								str += channelEntry( "beginScan", "BeginScan", signalTable, true );
-								str += channelEntry( "scanLength", "ScanLen", signalTable, false );
-								str += channelEntry(  "vSigmaF", "XSigmaF", signalTable, false );
-								str += channelEntry(  "dSigmaF", "YSigmaF", signalTable, false );
-								str += channelEntry(  "hSigmaF", "ZSigmaF", signalTable, false );
-								str += channelEntry(  "vFit", "XFit", signalTable, false );
-								str += channelEntry(  "dFit", "YFit", signalTable, false );
-								str += channelEntry(  "hFit", "ZFit", signalTable, false );
-								str += channelEntry(  "vPos", "XPos", signalTable, false );
-								str += channelEntry(  "dPos", "YPos", signalTable, false );
-								str += channelEntry(  "hPos", "ZPos", signalTable, false );
-								str += channelEntry(  "vSigmaM", "XSigmaM", signalTable, false );
-								str += channelEntry(  "dSigmaM", "YSigmaM", signalTable, false );
-								str += channelEntry(  "hSigmaM", "ZSigmaM", signalTable, false );
-								str += channelEntry(  "vAreaF", "XAreaF", signalTable, false );
-								str += channelEntry(  "dAreaF", "YAreaF", signalTable, false );
-								str += channelEntry(  "hAreaF", "ZAreaF", signalTable, false );
-								str += channelEntry(  "vAreaM", "XAreaM", signalTable, false );
-								str += channelEntry(  "dAreaM", "YAreaM", signalTable, false );
-								str += channelEntry(  "hAreaM", "ZAreaM", signalTable, false );
-								str += channelEntry(  "vAmpF", "XAmplF", signalTable, false );
-								str += channelEntry(  "dAmpF", "YAmplF", signalTable, false );
-								str += channelEntry(  "hAmpF", "ZAmplF", signalTable, false );
-								str += channelEntry(  "vAmpM", "XAmplM", signalTable, false );
-								str += channelEntry(  "dAmpM", "YAmplM", signalTable, false );
-								str += channelEntry(  "hAmpM", "ZAmplM", signalTable, false );
-								str += channelEntry(  "vMeanF", "XMeanF", signalTable, false );
-								str += channelEntry(  "dMeanF", "YMeanF", signalTable, false );
-								str += channelEntry(  "hMeanF", "ZMeanF", signalTable, false );
-								str += channelEntry(  "vMeanM", "XMeanM", signalTable, false );
-								str += channelEntry(  "dMeanM", "YMeanM", signalTable, false );
-								str += channelEntry(  "hMeanM", "ZMeanM", signalTable, false );
-								str += channelEntry(  "vOffstF", "XOffstF", signalTable, false );
-								str += channelEntry(  "dOffstF", "YOffstF", signalTable, false );
-								str += channelEntry(  "hOffstF", "ZOffstF", signalTable, false );
-								str += channelEntry(  "vOffstM", "XOffstM", signalTable, false );
-								str += channelEntry(  "dOffstM", "YOffstM", signalTable, false );
-								str += channelEntry(  "hOffstM", "ZOffstM", signalTable, false );
-								str += channelEntry(  "vSlopeF", "XSlopeF", signalTable, false );
-								str += channelEntry(  "dSlopeF", "YSlopeF", signalTable, false );
-								str += channelEntry(  "hSlopeF", "ZSlopeF", signalTable, false );
-								str += channelEntry(  "vSlopeM", "XSlopeM", signalTable, false );
-								str += channelEntry(  "dSlopeM", "YSlopeM", signalTable, false );
-								str += channelEntry(  "hSlopeM", "ZSlopeM", signalTable, false );
-								str += channelEntry(  "nSteps", "Steps", signalTable, true );
-								str += channelEntry(  "hRealData", "HorzSamp", signalTable, false );
-								str += channelEntry(  "vRealData", "VertSamp", signalTable, false );
-								str += channelEntry(  "dRealData", "DiagSamp", signalTable, false );
-							}
+						}else if (deviceType.equals("BPRM")) {
+							str = str + "       <channelsuite name=\"bprmsuite\">\n";
+							Map<String,List<String>> signalTable=fetchChannels( SIGNAL_FETCH, deviceID );
+							str +=channelEntry(signalTable);
 							chSuiteTag = true;
-						} 
-						else if (rset.getString("DVC_TYPE_ID").equals("ND")) {
-							final Map<String,String> signalTable = fetchSignals( SIGNAL_FETCH, deviceID );
-							str = str + "       <channelsuite name=\"blmsuite\">\n";
-							str += channelEntry( "lossAvg", "Slow1PulseBeamOnTotalLoss", signalTable, false );
-							str += channelEntry( "lossTBT", "Fast1PulseBeamOnLoss", signalTable, false );
+						}else if (deviceType.equals("IC")) {
+							str = str + "       <channelsuite name=\"icsuite\">\n";
+							Map<String,List<String>> signalTable=fetchChannels( SIGNAL_FETCH, deviceID );
+							str +=channelEntry(signalTable);
 							chSuiteTag = true;
-						} 
-						else if (rset.getString("DVC_TYPE_ID").equals("Foil")) {
+						}else {
+							//其他类型的诊断设备没有channel suite，不添加该节点
 							chSuiteTag = false;
-						} 
-						else if (rset.getString("DVC_TYPE_ID").equals("LStrp")) {
-							chSuiteTag = false;
-						} 
-						else if (rset.getString("DVC_TYPE_ID").equals("VIW")) {
-							chSuiteTag = false;
-						} 
-						else if (rset.getString("DVC_TYPE_ID").equals("Harp")) {
-
-
-						    if ( softType != null && softType.toLowerCase().contains( "version 2.0.0" ) ) {
-						        final Map<String,String> signalTable = fetchSignals( SIGNAL_FETCH, deviceID );
-						        str += "       <channelsuite name=\"harpsuite\">\n";
-
-						        str += channelEntry( "Command", "Command", signalTable, true );
-						        str += channelEntry( "CommandResult", "CommandResult", signalTable, false );
-
-						        str += channelEntry( "StatDevStatus", "Status", signalTable, false);
-						        str += channelEntry( "StatCtrlStatus", "ManualCtrlStatus_Rb", signalTable, false);
-						        str += channelEntry( "StatMpsStatus", "MPSstatus_Rb", signalTable, false);
-						        str += channelEntry( "StatHarpInsert", "insert_Rb", signalTable, false);
-						        str += channelEntry( "StatHarpRetract", "retract_Rb", signalTable, false);
-						        str += channelEntry( "StatHarpStop", "stop_Rb", signalTable, false);
-						        str += channelEntry( "StatCmdResult", "CommandResult", signalTable, false);
-
-						        str += channelEntry( "StatFitType", "Fit_Type", signalTable, false);
-						        str += channelEntry( "StatRecHorWires", "WireXEnable_Rb", signalTable, false);
-						        str += channelEntry( "StatRecVerWires", "WireYEnable_Rb", signalTable, false);
-						        str += channelEntry( "StatRecDiaWires", "WireZEnable_Rb", signalTable, false);
-
-						        str += channelEntry( "CfgGainCmnRb", "Gain_Rb", signalTable, false);
-						        str += channelEntry( "CfgGainCmnSet", "Gain", signalTable, true);
-//						        str += channelEntry( "CfgGainHorRb", "GainX", signalTable, false);
-//						        str += channelEntry( "CfgGainHorSet", "GainX", signalTable, true);
-//						        str += channelEntry( "CfgGainVerRb", "GainY", signalTable, false);
-//						        str += channelEntry( "CfgGainVerSet", "GainY", signalTable, true);
-//						        str += channelEntry( "CfgGainDiaRb", "GainZ", signalTable, false);
-//						        str += channelEntry( "CfgGainDiaSet", "GainZ", signalTable, true);
-						        str += channelEntry( "CfgTrgDelayRb", "Delay_Rb", signalTable, false);
-						        str += channelEntry( "CfgTrgDelaySet", "Delay", signalTable, true);
-						        str += channelEntry( "CfgTrgEventRb", "Event_Rb", signalTable, false);
-						        str += channelEntry( "CfgTrgEventSet", "Event", signalTable, true);
-
-						        str += channelEntry( "FitAttrHorAmp", "AmpX_Rb", signalTable, false);
-						        str += channelEntry( "FitAttrVerAmp", "AmpY_Rb", signalTable, false);
-						        str += channelEntry( "FitAttrDiaAmp", "AmpZ_Rb", signalTable, false);
-						        str += channelEntry( "FitAttrHorArea", "IntX_Rb", signalTable, false);
-						        str += channelEntry( "FitAttrVerArea", "IntY_Rb", signalTable, false);
-						        str += channelEntry( "FitAttrDiaArea", "IntZ_Rb", signalTable, false);
-						        str += channelEntry( "FitAttrHorMean", "CentX_Rb", signalTable, false);
-						        str += channelEntry( "FitAttrVerMean", "CentY_Rb", signalTable, false);
-						        str += channelEntry( "FitAttrDiaMean", "CentZ_Rb", signalTable, false);
-						        str += channelEntry( "FitAttrHorOffset", "OffsetX_Rb", signalTable, false);
-						        str += channelEntry( "FitAttrVerOffset", "OffsetY_Rb", signalTable, false);
-						        str += channelEntry( "FitAttrDiaOffset", "OffsetZ_Rb", signalTable, false);
-						        str += channelEntry( "FitAttrHorStd", "RMSX_Rb", signalTable, false);
-						        str += channelEntry( "FitAttrVerStd", "RMSY_Rb", signalTable, false);
-						        str += channelEntry( "FitAttrDiaStd", "RMSZ_Rb", signalTable, false);
-
-						        str += channelEntry( "DatHorRawPositions", "PosX_Rb", signalTable, false);
-						        str += channelEntry( "DatVerRawPositions", "PosY_Rb", signalTable, false);
-						        str += channelEntry( "DatDiaRawPositions", "PosZ_Rb", signalTable, false);
-						        str += channelEntry( "DatHorRawSignal", "SignalX_Rb", signalTable, false);
-						        str += channelEntry( "DatVerRawSignal", "SignalY_Rb", signalTable, false);
-						        str += channelEntry( "DatDiaRawSignal", "SignalZ_Rb", signalTable, false);
-
-						        str += channelEntry( "DatHorFitPositions", "A_PosX_Rb", signalTable, false);
-						        str += channelEntry( "DatVerFitPositions", "A_PosY_Rb", signalTable, false);
-						        str += channelEntry( "DatDiaFitPositions", "A_PosZ_Rb", signalTable, false);
-						        str += channelEntry( "DatHorFitSignal", "A_SignalX_Rb", signalTable, false);
-						        str += channelEntry( "DatVerFitSignal", "A_SignalY_Rb", signalTable, false);
-						        str += channelEntry( "DatDiaFitSignal", "A_SignalZ_Rb", signalTable, false);
-
-						    } else {
-						        str = str.concat( "\t\t<channelsuite name=\"harpsuite\">\n"
-						                + "\t\t\t<channel handle=\"xAmp\" signal=\"" + deviceID + ":AmpX_Rb\" settable=\"false\"/>\n"
-						                + "\t\t\t<channel handle=\"yAmp\" signal=\"" + deviceID + ":AmpY_Rb\" settable=\"false\"/>\n"
-						                + "\t\t\t<channel handle=\"diagAmp\" signal=\"" + deviceID + ":AmpZ_Rb\" settable=\"false\"/>\n"
-						                + "\t\t\t<channel handle=\"xSigma\" signal=\"" + deviceID + ":SigmaX_Rb\" settable=\"false\"/>\n"
-						                + "\t\t\t<channel handle=\"ySigma\" signal=\"" + deviceID + ":SigmaY_Rb\" settable=\"false\"/>\n"
-						                + "\t\t\t<channel handle=\"diagSigma\" signal=\"" + deviceID + ":SigmaZ_Rb\" settable=\"false\"/>\n"
-						                + "\t\t\t<channel handle=\"xOffset\" signal=\"" + deviceID + ":OffsetX_Rb\" settable=\"false\"/>\n"
-						                + "\t\t\t<channel handle=\"yOffset\" signal=\"" + deviceID + ":OffsetY_Rb\" settable=\"false\"/>\n"
-						                + "\t\t\t<channel handle=\"diagOffset\" signal=\"" + deviceID + ":OffsetZ_Rb\" settable=\"false\"/>\n"
-						                + "\t\t\t<channel handle=\"xRMS\" signal=\"" + deviceID + ":RMSX_Rb\" settable=\"false\"/>\n"
-						                + "\t\t\t<channel handle=\"yRMS\" signal=\"" + deviceID + ":RMSY_Rb\" settable=\"false\"/>\n"
-						                + "\t\t\t<channel handle=\"diagRMS\" signal=\"" + deviceID + ":RMSZ_Rb\" settable=\"false\"/>\n"
-						                + "\t\t\t<channel handle=\"xRMS1\" signal=\"" + deviceID + ":RMS1X_Rb\" settable=\"false\"/>\n"
-						                + "\t\t\t<channel handle=\"yRMS1\" signal=\"" + deviceID + ":RMS1Y_Rb\" settable=\"false\"/>\n"
-						                + "\t\t\t<channel handle=\"diagRMS1\" signal=\"" + deviceID + ":RMS1Z_Rb\" settable=\"false\"/>\n"
-						                + "\t\t\t<channel handle=\"xPosAvg\" signal=\"" + deviceID + ":RMSPX_Rb\" settable=\"false\"/>\n"
-						                + "\t\t\t<channel handle=\"yPosAvg\" signal=\"" + deviceID + ":RMSPY_Rb\" settable=\"false\"/>\n"
-						                + "\t\t\t<channel handle=\"diagPosAvg\" signal=\"" + deviceID + ":RMSPZ_Rb\" settable=\"false\"/>\n"
-						                );
-						    }
-						    chSuiteTag = true;
 						}
-						else {
-						    chSuiteTag = false;
-						}
+						
+
 						tmpCounter++;
 					}
 
@@ -1209,60 +915,69 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 					str = str.concat("    </node>\n");
 				}
 
+				/*
+				 * 添加完束测元件之后添加RF gap的信息
+				 */
 				// put Rf gaps here
-				String dtlCounter_str = String.valueOf(dtlCounter);
-				String cclCounter_str = String.valueOf(cclCounter);
-
-				if (sequences[k].equals("DTL1") || sequences[k].equals("DTL2")
-						|| sequences[k].equals("DTL3")
-						|| sequences[k].equals("DTL4")
-						|| sequences[k].equals("DTL5")
-						|| sequences[k].equals("DTL6")
-						|| sequences[k].equals("CCL1")
-						|| sequences[k].equals("CCL2")
-						|| sequences[k].equals("CCL3")
-						|| sequences[k].equals("CCL4")) {
+				
+				String dtlCounter_str = String.valueOf(dtlCounter);//DTL tank的个数
+//				String cclCounter_str = String.valueOf(cclCounter);
+				
+				//下面只是对DTL和CCL有效，对于其他的加速腔如debuncher和MA cavity需要再单独考虑，因为他们加速间隙少，寄生在其他sequence当中
+				if (sequences[k].equals("DTL") || sequences[k].equals("DTL1")//考虑到CPHS需要用到DTL1和DTL2
+						|| sequences[k].equals("DTL2")) {
 
 					String queryString = "";
 					// get all the rf gaps within this sequence
+					/*
+					 * 在XAL中加速腔都是作为一个sequence存在的，每一个gap都是一个node，也就是一个DVC，DVC_ID是针对RF gap的。
+					 * 我想应该是这样的：DTL和CCL单独作为一个sequence，存放于DVC_SEQ和rf_dvc表当中，其gap位于DVC和beam_line_dvc当中，
+					 * 因为gap作为一个node具有两张表的信息
+					 * 同时RF gap中也存储了gap的额外信息，需要放在RF gap表当中。
+					 * 而其他的如聚束腔，整体表现为node的性质，感觉晕了。。。
+					 * XiPAF方案：只有散束器和磁合金腔加入DVC和beam_line_dvc，其余加速腔放在rf_dvc，加速间隙放在rf_gap
+					 */
+					//DTL tank内gap的查询语句
 					if (sequences[k].substring(0, 3).equals("DTL"))
 						queryString = "SELECT * " + "FROM EPICS.DVC a, "
-								+ "EPICS.RF_GAP d " + "where a.sys_id = 'DTL' "
-								+ "and a.Dvc_id = d.Dvc_id "
+								+ "EPICS.RF_GAP d " + "where a.subsys_id = 'DTL' "//DTL gap的 subsys_ID是DTL,sys_id是linac
+								+ "and a.Dvc_id = d.Dvc_id "//DVC表中还需要加上L:DTL:CAV01，即DTL加速腔
 								+ "and d.Dvc_id like '"
-								+ sequences[k].substring(0, 3) + "_RF:Cav0"
+								+ "L:"+sequences[k].substring(0, 3) + ":Cav0"
 								+ dtlCounter_str + "%'"
-								+ "order by d.Dist_From_Strt";
-					else
-						queryString = "SELECT * " + "FROM EPICS.DVC a, "
-								+ "EPICS.RF_GAP d " + "where a.sys_id = 'CCL' "
-								+ "and a.Dvc_id = d.Dvc_id "
-								+ "and d.Dvc_id like '"
-								+ sequences[k].substring(0, 3) + "_RF:Cav0"
-								+ cclCounter_str + "%'"
-								+ "order by d.Dist_From_Strt";
+								+ "order by d.Dist_From_Start";
+					//CCL tank内gap的查询语句
+//					else
+//						queryString = "SELECT * " + "FROM EPICS.DVC a, "
+//								+ "EPICS.RF_GAP d " + "where a.sys_id = 'CCL' "
+//								+ "and a.Dvc_id = d.Dvc_id "
+//								+ "and d.Dvc_id like '"
+//								+ sequences[k].substring(0, 3) + "_RF:Cav0"
+//								+ cclCounter_str + "%'"
+//								+ "order by d.Dist_From_Start";
 
 					ResultSet rsetRfGaps = stmt.executeQuery(queryString);
-
+					//RF_GAP_ID和DVC_ID的关系是？
+					//从下面的代码来看RF_GAP_ID才是GAP的ID
 					while (rsetRfGaps.next()) {
 						System.out.println(rsetRfGaps.getString("RF_GAP_ID"));
 						str = str.concat("    <node type=\"RG\" id=\""
 								+ rsetRfGaps.getString("RF_GAP_ID") + "\""
 								+ " pos=\""
-								+ rsetRfGaps.getString("DIST_FROM_STRT")
+								+ rsetRfGaps.getString("DIST_FROM_START")
 								+ "\">\n" + "       <attributes>\n"
 								+ "          <rfgap length=\""
-								+ rsetRfGaps.getString("GAP_LNGTH") + "\""
+								+ rsetRfGaps.getString("GAP_LENGTH") + "\""
 								+ " phaseFactor=\""
 								+ rsetRfGaps.getString("PHASE_OFFSET") + "\""
 								+ " ampFactor=\""
-								+ rsetRfGaps.getString("AMPL_TILT") + "\""
+								+ rsetRfGaps.getString("AMP_TILT") + "\""
 								+ " TTF=\"" + rsetRfGaps.getString("TTF")
 								+ "\"");
-						if (rsetRfGaps.getString("END_CELL_IND").equals("Y"))
+						if (rsetRfGaps.getString("END_CELL_IND").equals("1"))//20160913，在我们的数据库中使用1和0来表示状态，1为end cell，0非end cell，原来是Y和N
 							str = str.concat(" endCell=\"1\"");
 						else if (rsetRfGaps.getString("END_CELL_IND").equals(
-								"N"))
+								"0"))
 							str = str.concat(" endCell=\"0\"");
 						str = str.concat(" gapOffset=\""
 								+ getNumericString( rsetRfGaps.getString("ELEC_CNTR_OFF") )
@@ -1272,42 +987,47 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 					rsetRfGaps.close();
 					if (sequences[k].substring(0, 3).equals("DTL"))
 						dtlCounter++;
-					else if (sequences[k].substring(0, 3).equals("CCL"))
-						cclCounter++;
+//					else if (sequences[k].substring(0, 3).equals("CCL"))
+//						cclCounter++;
 					// for all other sequences with rf cavities in them.
-				} 
-				else if (sequences[k].equals("MEBT") || sequences[k].equals("SCLMed") || sequences[k].equals("SCLHigh") || sequences[k].equals("Ring1") || sequences[k].equals("Ring2") || sequences[k].equals("Ring3") || sequences[k].equals("Ring4") || sequences[k].equals("Ring5")) {
+				}
+				
+				//下面考虑其他加速腔，如散束器，磁合金腔
+				//对于XiPAF来说，只要再考虑MEBT和Ring2，下面的查询语句需要结合自己的数据库设计进行。
+				else if (sequences[k].equals("MEBT") || sequences[k].equals("RING2")) {
 
-					// get all the rf rebunchers
+					// 查询所有的散束器、磁合金腔
+					//20160914出现一个问题，检索不到磁合金腔
 					ResultSet rsetRb;
 					rsetRb = stmt.executeQuery("SELECT EPICS.DVC.DVC_ID, "
-									+ "EPICS.BEAM_LINE_DVC_LOC.DSGN_GLBL_COORD_X, "
-									+ "EPICS.BEAM_LINE_DVC_LOC.DSGN_GLBL_COORD_Y, "
-									+ "EPICS.BEAM_LINE_DVC_LOC.DSGN_GLBL_COORD_Z, "
-									+ "EPICS.BEAM_LINE_DVC_LOC.DSGN_GLBL_COORD_PHI, "
-									+ "EPICS.BEAM_LINE_DVC_LOC.DSGN_GLBL_COORD_PSI, "
-									+ "EPICS.BEAM_LINE_DVC_LOC.DSGN_GLBL_COORD_THETA, "
-									+ "EPICS.BEAM_LINE_DVC_LOC.DIST_FROM_STRT, "
-									+ "EPICS.BEAM_LINE_DVC_LOC.PHYS_LNGTH, "
-									+ "EPICS.BEAM_LINE_DVC_LOC.DSGN_USAGE_IND, "
-									+ "EPICS.DVC_SETTING.SETTING_ID, "
-									+ "EPICS.DVC_SETTING.SETTING_VALUE, "
-									+ "EPICS.RF_CAV_DVC.* "
+									+ "EPICS.BEAM_LINE_DVC.GLBL_COORD_X, "
+									+ "EPICS.BEAM_LINE_DVC.GLBL_COORD_Y, "
+									+ "EPICS.BEAM_LINE_DVC.GLBL_COORD_Z, "
+									+ "EPICS.BEAM_LINE_DVC.GLBL_COORD_PITCH, "
+									+ "EPICS.BEAM_LINE_DVC.GLBL_COORD_YAW, "
+									+ "EPICS.BEAM_LINE_DVC.GLBL_COORD_ROLL, "
+									+ "EPICS.BEAM_LINE_DVC.DIST_FROM_START, "
+									+ "EPICS.BEAM_LINE_DVC.PHYS_LENGTH, "
+									+ "EPICS.BEAM_LINE_DVC.DSGN_USAGE_IND, "
+									+ "EPICS.DVC_SET.SETTING_ID, "
+									+ "EPICS.DVC_SET.SETTING_VALUE, "
+									+ "EPICS.RF_DVC.* "
 									+ "FROM EPICS.DVC, "
-									+ "EPICS.RF_CAV_DVC, "
-									+ "EPICS.BEAM_LINE_DVC_LOC, "
-									+ "EPICS.DVC_SETTING "
-									+ "where EPICS.DVC.Dvc_id = EPICS.RF_CAV_DVC.Dvc_id "
-									+ "and EPICS.DVC.Dvc_id = EPICS.DVC_SETTING.Dvc_id "
-									+ "and EPICS.BEAM_LINE_DVC_LOC.DVC_id like '"
-									+ sequences[k].substring(0, 3)
-									+ "%' "
-									+ "and EPICS.BEAM_LINE_DVC_LOC.SEQ_NM='"
+									+ "EPICS.RF_DVC, "
+									+ "EPICS.BEAM_LINE_DVC, "
+									+ "EPICS.DVC_SET "
+									+ "where EPICS.DVC.Dvc_id = EPICS.RF_DVC.Dvc_id "
+									+ "and EPICS.DVC.Dvc_id = EPICS.DVC_SET.Dvc_id "
+//									+ "and EPICS.BEAM_LINE_DVC.DVC_id like '"
+//									+ sequences[k].substring(0, 3)//就是以sequence name开头的所有名称，要匹配的字符串用单引号括起来
+//									+ "%' "
+									+ "and EPICS.DVC.Dvc_id = EPICS.BEAM_LINE_DVC.DVC_id "
+									+ "and EPICS.BEAM_LINE_DVC.SEQ_NM='"
 									+ sequences[k]
 									+ "' "
-									+ "and EPICS.DVC.Dvc_id = EPICS.BEAM_LINE_DVC_LOC.Dvc_id "
-									+ "order by EPICS.BEAM_LINE_DVC_LOC.Dist_From_Strt, EPICS.DVC.DVC_ID, EPICS.DVC_SETTING.SETTING_ID");
-
+//									+ "and EPICS.DVC.Dvc_id = EPICS.BEAM_LINE_DVC.Dvc_id "
+									+ "order by EPICS.BEAM_LINE_DVC.Dist_From_Start, EPICS.DVC.DVC_ID, EPICS.DVC_SET.SETTING_ID");
+					
 					// get all the rf gaps within this sequence
 					ResultSet rsetRfGaps = stmt1.executeQuery("SELECT * FROM EPICS.RF_GAP ");
 
@@ -1320,11 +1040,12 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 						if ( !rbName.equals( rbID ) ) {
 							rbAttTag = false;
 							System.out.println( rbName );
-							if ( sequences[k].startsWith( "SCL" ) )
-								str = str.concat("    <sequence type=\"SCLCavity\" id=\"" + rbName + "\"");
+							if ( sequences[k].startsWith( "Ring" ) )//环上的为磁合金腔
+								str = str.concat("    <sequence type=\"MACavity\" id=\"" + rbName + "\"");
 							else
-								str = str.concat("    <sequence type=\"Bnch\" id=\""+ rbName + "\"");
-							str = str.concat(" pos=\"" + rsetRb.getString("DIST_FROM_STRT") + "\" len=\"" + getNumericString( rsetRb.getString("PHYS_LNGTH") ) + "\"");
+								str = str.concat("    <sequence type=\"DeBnch\" id=\""+ rbName + "\"");//类型改为DeBnch，原来为Bnch
+							//这些子序列放在大的序列外面，也具有node的一个bracket属性
+							str = str.concat(" pos=\"" + rsetRb.getString("DIST_FROM_START") + "\" len=\"" + getNumericString( rsetRb.getString("PHYS_LENGTH") ) + "\"");
 							if ( rsetRb.getString("DSGN_USAGE_IND").equals("Y") )
 								str = str.concat(" status=\"true\">\n");
 							else
@@ -1334,13 +1055,13 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 							// we use "zero" error for alignment for now
 							str = str.concat("          <align" 
 								+ " x=\"0.0\" y=\"0.0\" z=\"0.0\""
-								+ " pitch=\"" + rsetRb.getString("DSGN_GLBL_COORD_PHI") + "\""
-								+ " yaw=\""+ rsetRb.getString("DSGN_GLBL_COORD_PSI") + "\""
-								+ " roll=\"" + rsetRb.getString("DSGN_GLBL_COORD_THETA") + "\"/>\n");
+								+ " pitch=\"" + rsetRb.getString("GLBL_COORD_PITCH") + "\""
+								+ " yaw=\""+ rsetRb.getString("GLBL_COORD_YAW") + "\""
+								+ " roll=\"" + rsetRb.getString("GLBL_COORD_ROLL") + "\"/>\n");
 							str = str.concat("          <rfcavity");
-							if (rsetRb.getString("SETTING_ID").equals("MV/m"))
+							if (rsetRb.getString("SETTING_ID").equals("Amp"))//由Mv/m改成Amp，deg改成Phase，含义更明显
 								str = str.concat("                 amp=\"" + rsetRb.getString("SETTING_VALUE") + "\"\n");
-							if (rsetRb.getString("SETTING_ID").equals("deg"))
+							if (rsetRb.getString("SETTING_ID").equals("Phase"))
 								str = str.concat("                 phase=\"" + rsetRb.getString("SETTING_VALUE") + "\"\n");
 							str = str.concat("                 TTFCoefs=\"" + rsetRb.getString("T0_COEF") + ", " + rsetRb.getString("T1_COEF") + ", " + rsetRb.getString("T2_COEF") + "\"\n"
 								+ "                 TTFPrimeCoefs=\"" + rsetRb.getString("TP0_COEF") + ", " + rsetRb.getString("TP1_COEF") + ", " + rsetRb.getString("TP2_COEF") + "\"\n"
@@ -1351,16 +1072,17 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 								+ "                 STF_endCoefs=\"" + rsetRb.getString("S0_END_COEF") + ", " + rsetRb.getString("S1_END_COEF") + ", " + rsetRb.getString("S2_END_COEF") + "\"\n"
 								+ "                 STFPrime_endCoefs=\"" + rsetRb.getString("SP0_END_COEF") + ", " + rsetRb.getString("SP1_END_COEF") + ", " + rsetRb.getString("SP2_END_COEF") + "\"\n"
 								+ "                 structureMode=\"" + rsetRb.getString("STRUCT_TYPE_IND") + "\"\n");
-							if (sequences[k].substring(0, 3).equals("SCL"))
-								str = str.concat("                 structureTTF=\"" + rsetRb.getString("TTF") + "\"\n                 qLoaded=\"" + getNumericString( rsetRb.getString("Q_LD") ) + "\"\n");
+							//对于超导腔还有TTF和Q loaded熟悉
+//							if (sequences[k].substring(0, 3).equals("SCL"))
+//								str = str.concat("                 structureTTF=\"" + rsetRb.getString("TTF") + "\"\n                 qLoaded=\"" + getNumericString( rsetRb.getString("Q_LD") ) + "\"\n");
 
 							rbID = rbName;
 						} 
 						else {
-							if ( rsetRb.getString("SETTING_ID").equals("MV/m") ) {
+							if ( rsetRb.getString("SETTING_ID").equals("Amp") ) {
 								str = str.concat("                 amp=\"" + rsetRb.getString("SETTING_VALUE") + "\"");
 							}
-							else if ( rsetRb.getString("SETTING_ID").equals("deg") )
+							else if ( rsetRb.getString("SETTING_ID").equals("Phase") )
 								str = str.concat("                 phase=\"" + rsetRb.getString("SETTING_VALUE") + "\"");
 							rbAttTag = true;
 						}
@@ -1368,58 +1090,12 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 						if (rbAttTag) {
 							str = str.concat(" freq=\"" + rsetRb.getString("DSGN_FREQ") + "\"/>\n       </attributes>\n       <channelsuite name=\"rfsuite\">\n");
 
-							if ( sequences[k].equals("MEBT") ) {
-								final String buncher = rbName.substring( rbName.indexOf("Bnch") + 5);
-								final String buncherFCM = sequences[k] + "_LLRF:FCM" + buncher;
-								str = str.concat("        <channel handle=\"cavAmpSet\" signal=\"" + buncherFCM + ":CtlAmpSet\" settable=\"true\"/>\n"
-									+ "        <channel handle=\"cavPhaseSet\" signal=\"" + buncherFCM + ":CtlPhaseSet\" settable=\"true\"/>\n"
-									+ "        <channel handle=\"cavAmpAvg\" signal=\"" + buncherFCM + ":cavV\" settable=\"false\"/>\n"
-									+ "        <channel handle=\"peakErr\" signal=\"" + buncherFCM + ":PeakErr\" settable=\"false\"/>\n"
-									+ "        <channel handle=\"regErr\" signal=\"" + buncherFCM + ":RegErr\" settable=\"false\"/>\n"
-									+ "        <channel handle=\"resErrAvg\" signal=\"MEBT_LLRF:ResCtrl" + buncher + ":ResErr_Avg\" settable=\"false\"/>\n"
-									+ "        <channel handle=\"cavPhaseAvg\" signal=\"" + buncherFCM + ":cavPhaseAvg\" settable=\"false\"/>\n"
-									+ "        <channel handle=\"deltaTRFStart\" signal=\"" + buncherFCM + ":deltaTRFStart\" settable=\"true\"/>\n"
-									+ "        <channel handle=\"deltaTRFEnd\" signal=\"" + buncherFCM + ":deltaTRFEnd\" settable=\"true\"/>\n"
-									+ "        <channel handle=\"tDelay\" signal=\"" + buncherFCM + ":tDelay\" settable=\"true\"/>\n"
-                                    + "        <channel handle=\"blankBeam\" signal=\"" + buncherFCM + ":BlnkBeam\" settable=\"true\"/>\n"
-                                    + "        <channel handle=\"RF_ON\" signal=\"" + sequences[k] + "_LLRF:Cav" + buncher + ":RF_ON\" settable=\"false\"/>\n"
-                                    );
-							}
-							// for ring
-							else if ( sequences[k].startsWith("Ring") ) {
-								final String ringCav = rbName.substring( rbName.indexOf("Cav") + 4 );
-								final String ringFCM = "Ring_LLRF:FCM" + ringCav;
-								str = str.concat("        <channel handle=\"cavAmpSet\" signal=\"" + ringFCM + ":CtlAmpSet\" settable=\"true\"/>\n"
-									+ "        <channel handle=\"cavPhaseSet\" signal=\"" + ringFCM + ":CtlPhaseSet\" settable=\"true\"/>\n"
-									+ "        <channel handle=\"cavAmpAvg\" signal=\"" + ringFCM + ":cavV\" settable=\"false\"/>\n"
-									+ "        <channel handle=\"peakErr\" signal=\"" + ringFCM + ":PeakErr\" settable=\"false\"/>\n"
-									+ "        <channel handle=\"regErr\" signal=\"" + ringFCM + ":RegErr\" settable=\"false\"/>\n"
-									+ "        <channel handle=\"resErrAvg\" signal=\"Ring_LLRF:ResCtrl" + ringCav + ":ResErr_Avg\" settable=\"false\"/>\n"
-									+ "        <channel handle=\"cavPhaseAvg\" signal=\"" + ringFCM + ":cavPhaseAvg\" settable=\"false\"/>\n"
-									+ "        <channel handle=\"deltaTRFStart\" signal=\"" + ringFCM + ":deltaTRFStart\" settable=\"true\"/>\n"
-									+ "        <channel handle=\"deltaTRFEnd\" signal=\"" + ringFCM + ":deltaTRFEnd\" settable=\"true\"/>\n"
-                                    + "        <channel handle=\"tDelay\" signal=\"" + ringFCM + ":tDelay\" settable=\"true\"/>\n"
-                                    );
-							}
-							// for SCL
-							else if ( sequences[k].startsWith("SCL") ) {
-								final String sclCav = rbName.substring( rbName.indexOf("Cav") + 3 );
-								final String sclFCM = "SCL_LLRF:FCM" + sclCav;
-								str = str.concat("        <channel handle=\"cavAmpSet\" signal=\"" + sclFCM + ":CtlAmpSet\" settable=\"true\"/>\n"
-									+ "        <channel handle=\"cavPhaseSet\" signal=\"" + sclFCM + ":CtlPhaseSet\" settable=\"true\"/>\n"
-									+ "        <channel handle=\"cavAmpAvg\" signal=\"" + sclFCM + ":cavV\" settable=\"false\"/>\n"
-									+ "        <channel handle=\"peakErr\" signal=\"" + sclFCM + ":PeakErr\" settable=\"false\"/>\n"
-									+ "        <channel handle=\"regErr\" signal=\"" + sclFCM + ":RegErr\" settable=\"false\"/>\n"
-									+ "        <channel handle=\"resErrAvg\" signal=\"SCL_LLRF:ResCtrl" + sclCav + ":ResErr_Avg\" settable=\"false\"/>\n"
-									+ "        <channel handle=\"cavPhaseAvg\" signal=\"" + sclFCM + ":cavPhaseAvg\" settable=\"false\"/>\n"
-									+ "        <channel handle=\"deltaTRFStart\" signal=\"" + sclFCM + ":deltaTRFStart\" settable=\"true\"/>\n"
-									+ "        <channel handle=\"deltaTRFEnd\" signal=\"" + sclFCM + ":deltaTRFEnd\" settable=\"true\"/>\n"
-									+ "        <channel handle=\"tDelay\" signal=\"" + sclFCM + ":tDelay\" settable=\"true\"/>\n"
-                                    + "        <channel handle=\"blankBeam\" signal=\"" + sclFCM + ":BlnkBeam\" settable=\"true\"/>\n"
-                                    + "        <channel handle=\"RF_ON\" signal=\"" + "SCL_LLRF:Cav" + sclCav + ":RF_ON\" settable=\"false\"/>\n"
-                                    );
-							}
-
+							/*
+							 * 下面这部分代码为加速腔的channel suite，改成从数据库channel表中获取，方便后续的更新维护
+							 * 而不能写死在代码中,改成两行代码即可，大大精简了代码
+							 */
+							Map<String,List<String>> signalTable=fetchChannels( SIGNAL_FETCH, rbName );
+							str +=channelEntry(signalTable);
 							str = str + "       </channelsuite>\n";
 
 							str = queryRFGaps(str, rsetRfGaps, rbName);
@@ -1436,7 +1112,7 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 
 				// close the <sequence>
 				str = str + "  </sequence>\n";
-
+				wholeText+=str;
 				byte buf[] = str.getBytes();
 				fout.write(buf);
 			}
@@ -1447,7 +1123,7 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 			exception.printStackTrace();
 			displayError( "Error", "Exception generating device.", exception );
 		}
-
+		wholeText+=str;
 		byte buf1[] = str.getBytes();
 		fout.write(buf1);
 		fout.close();
@@ -1464,19 +1140,20 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 		//
 		rsetRfGaps.first();
 		while (rsetRfGaps.next()) {
+			//从下面的代码来看，DVC_ID值得是整个buncher的ID，GAP有单独的ID。
 			if (rsetRfGaps.getString("DVC_ID").equals(rbName)) {
 				System.out.println(rsetRfGaps.getString("RF_GAP_ID"));
 				str = str.concat("       <node type=\"RG\" id=\""
 								+ rsetRfGaps.getString("RF_GAP_ID") + "\""
 								+ " pos=\""
-								+ rsetRfGaps.getString("DIST_FROM_STRT")
+								+ rsetRfGaps.getString("DIST_FROM_START")
 								+ "\">\n" + "         <attributes>\n"
 								+ "          <rfgap length=\""
-								+ rsetRfGaps.getString("GAP_LNGTH") + "\""
+								+ rsetRfGaps.getString("GAP_LENGTH") + "\""
 								+ " phaseFactor=\""
 								+ rsetRfGaps.getString("PHASE_OFFSET") + "\""
 								+ " ampFactor=\""
-								+ rsetRfGaps.getString("AMPL_TILT") + "\""
+								+ rsetRfGaps.getString("AMP_TILT") + "\""
 								+ " TTF=\"" + rsetRfGaps.getString("TTF")
 								+ "\"");
 				if (rsetRfGaps.getString("END_CELL_IND").equals("Y"))
@@ -1495,12 +1172,29 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 	private String queryPowerSupplies( OutputStream fout, Connection connection, Statement stmt, String[] sequences ) throws IOException, SQLException {
 		String str;
 		str = "  <powersupplies>\n";
-
+		wholeText+=str;
 		byte buf[] = str.getBytes();
 		fout.write(buf);
 		
+		/*
+		 * 查询所有的电源类设备的信号
+		 */
+		final PreparedStatement SIGNAL_FETCH = connection.prepareStatement( "select epics.dvc.dvc_id, "
+				+ "epics.channel.* "
+				+"from epics.dvc, "
+				+ "epics.channel "
+				+ "where epics.dvc.dvc_id = ? "
+				+ "and epics.dvc.dvc_type_id= epics.channel.dvc_type_id "
+				+ "order by epics.channel.signal" );
+		
 		// query for all systems related to a specified sequence
-		final PreparedStatement systemQuery = connection.prepareStatement( "select epics.dvc.sys_id from epics.dvc, epics.beam_line_dvc_loc where epics.dvc.dvc_id = epics.beam_line_dvc_loc.dvc_id and epics.beam_line_dvc_loc.seq_nm = ? group by epics.dvc.sys_id" );
+		//先查询系统的原因是后续的查询没有sequence信息，先把sequence信息放在system id当中
+		//但是不允许同一个system id对应不同的sequence，这样通过system id就会把其他sequence的信息包含进来
+		final PreparedStatement systemQuery = connection.prepareStatement( "select epics.dvc.sys_id "
+				+ "from epics.dvc, "
+				+ "epics.beam_line_dvc "
+				+ "where epics.dvc.dvc_id = epics.beam_line_dvc.dvc_id "
+				+ "and epics.beam_line_dvc.seq_nm = ? group by epics.dvc.sys_id" );
 		
 		// collect all systems covering all the specified sequences
 		final Set<String> systemSet = new HashSet<String>();
@@ -1518,29 +1212,12 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 		// for power supplies
 		String tmpSystem = "";
 		for ( final String system : systems ) {
-			/*
-			 * if (sequences[k].equals("HEBT1") || sequences[k].equals("HEBT2")) {
-			 * queryString = "SELECT EPICS.DVC.DVC_ID, " +
-			 * "EPICS.DVC.ACT_DVC_IND, " + "EPICS.FUNC_DVC_GRP_ITEM.RELATED_DVC " +
-			 * "FROM EPICS.DVC, " + "EPICS.FUNC_DVC_GRP_ITEM " + "where
-			 * ((EPICS.DVC.DVC_TYPE_ID='PS' " + "and EPICS.DVC.SUBSYS_ID='Mag') " +
-			 * "or EPICS.DVC.DVC_TYPE_ID='ShntC' ) " + "and (EPICS.DVC.DVC_id
-			 * like '" + sequences[k].substring(0, 2) + "%' " + "or
-			 * EPICS.DVC.DVC_id='Ring_Mag:PS_DH_A11') " + "and EPICS.DVC.Dvc_id =
-			 * EPICS.FUNC_DVC_GRP_ITEM.RELATED_DVC(+) " + "and
-			 * EPICS.DVC.ACT_DVC_IND = 'Y' "; } else {
-			 */
 			 String queryString = "SELECT DISTINCT EPICS.DVC.DVC_ID, "
-					+ "EPICS.DVC.ACT_DVC_IND, "
-					+ "EPICS.FUNC_DVC_GRP_ITEM.RELATED_DVC "
-					+ "FROM EPICS.DVC, "
-					+ "EPICS.FUNC_DVC_GRP_ITEM "
-					+ "where ((EPICS.DVC.DVC_TYPE_ID='PS'  "
+					+"EPICS.DVC.DVC_TYPE_ID "
+					+ "FROM EPICS.DVC "
+					+ "where (EPICS.DVC.DVC_TYPE_ID IN ('PSMain','PSTrim') "
 					+ "and EPICS.DVC.SUBSYS_ID='Mag') "
-					+ "or EPICS.DVC.DVC_TYPE_ID='ShntC' ) "
 					+ "and EPICS.DVC.sys_id = '" + system + "' "
-					+ "and EPICS.DVC.Dvc_id = EPICS.FUNC_DVC_GRP_ITEM.RELATED_DVC(+) "
-					+ "and EPICS.DVC.ACT_DVC_IND = 'Y' "
 					+ "order by EPICS.DVC.DVC_ID";
 					
 			if ( !tmpSystem.equals( system ) ) {
@@ -1553,43 +1230,22 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 				while (rsetPS.next()) {
                     final String deviceID = rsetPS.getString( "DVC_ID" );
 					System.out.println( deviceID );
-					if (rsetPS.getObject("RELATED_DVC") != null) {
-						str = "    <ps type=\"trim\" id=\"" + rsetPS.getString("DVC_ID") + "\">\n";
-						str = str + "       <channelsuite name=\"pssuite\">\n"
-								+ "          <channel handle=\"trimSet\" signal=\"" + deviceID + ":B_Set\"/>\n"
-								+ "          <channel handle=\"trimRB\" signal=\"" + deviceID + ":B\"/>\n"
-								+ "          <channel handle=\"trimI_Set\" signal=\"" + deviceID + ":I_Set\"/>\n"
-								+ "          <channel handle=\"trimI\" signal=\"" + deviceID + ":I\"/>\n"
-								+ "          <channel handle=\"cycleState\" signal=\"" + deviceID + ":cycleState\"/>\n";
-
-						str = str + "       </channelsuite>\n" + "    </ps>\n";
-					} 
-					else {
+					if (rsetPS.getString("DVC_TYPE_ID").equals("PSMain")) {
 						str = "    <ps type=\"main\" id=\"" + rsetPS.getString("DVC_ID") + "\">\n";
-						str = str + "       <channelsuite name=\"pssuite\">\n"
-								+ "          <channel handle=\"" + "I\" signal=\"" + deviceID + ":I\"/>\n" 
-                                + "          <channel handle=\"" + "I_Set\" signal=\"" + deviceID + ":I_Set\"/>\n"
-								+ "          <channel handle=\"" + "fieldSet\" signal=\"" + deviceID + ":B_Set\"/>\n"
-								+ "          <channel handle=\"" + "psFieldRB\" signal=\"" + deviceID + ":B\"/>\n";
-                        
-                        // only extraction kicker power supplies have voltage PVs (todo: need to fetch signals directly from DB instead of hardcoding exceptions)
-                        if ( deviceID.matches( ".+:PS_EKick[^_]*" ) ) {     // match extraction kickers but not the associated waveform power supplies
-                            str +=  "          <channel handle=\"" + "voltageSet\" signal=\"" + deviceID + ":V_Set\"/>\n"
-                                +   "          <channel handle=\"" + "voltageRB\" signal=\"" + deviceID + ":V\"/>\n";
-                        }
-								
-                        str +=  "          <channel handle=\"" + "cycleState\" signal=\"" + deviceID + ":cycleState\"/>\n"
-                            +   "          <channel handle=\"" + "cycleEnable\" signal=\"" + deviceID + ":cycleEnable\"/>\n";
-                        
-						final int qIndex = deviceID.indexOf( "Q" );			// quadrupole
-						final int dhIndex = deviceID.indexOf( "DH" );		// bend
-						final int sptmIndex = deviceID.indexOf( "Sptm" );	// septum
-						if ( ( qIndex > 7 && qIndex < 13 ) || ( dhIndex > 7 && dhIndex < 13 ) || ( sptmIndex > 7 && sptmIndex < 20 ) ) {
-							str = str + "          <channel handle=\"B_Book\" signal=\"" + deviceID + ":B_Book\"/>\n";
-						}
-
+						str = str + "       <channelsuite name=\"pssuite\">\n";
+						Map<String,List<String>> signalTable=fetchChannels( SIGNAL_FETCH, deviceID );
+						str +=channelEntry(signalTable);
 						str = str + "       </channelsuite>\n    </ps>\n";
+					}else if (rsetPS.getString("DVC_TYPE_ID").equals("PSTrim")) {
+						str = "    <ps type=\"trim\" id=\"" + rsetPS.getString("DVC_ID") + "\">\n";
+						str = str + "       <channelsuite name=\"pssuite\">\n";
+						Map<String,List<String>> signalTable=fetchChannels( SIGNAL_FETCH, deviceID );
+						str +=channelEntry(signalTable);
+						str = str + "       </channelsuite>\n    </ps>\n";
+					}else {
+						//do nothing
 					}
+					wholeText+=str;
 					byte bufPS[] = str.getBytes();
 					fout.write(bufPS);
 				}
@@ -1608,25 +1264,25 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 		if (sequences[k].equals("RFQ")) {
 			ResultSet rsetRfq;
 			rsetRfq = stmt.executeQuery("SELECT EPICS.DVC.DVC_ID, "
-					+ "EPICS.BEAM_LINE_DVC_LOC.DSGN_USAGE_IND, "
-					+ "EPICS.BEAM_LINE_DVC_LOC.DSGN_GLBL_COORD_X, "
-					+ "EPICS.BEAM_LINE_DVC_LOC.DSGN_GLBL_COORD_Y, "
-					+ "EPICS.BEAM_LINE_DVC_LOC.DSGN_GLBL_COORD_Z, "
-					+ "EPICS.BEAM_LINE_DVC_LOC.DSGN_GLBL_COORD_PHI, "
-					+ "EPICS.BEAM_LINE_DVC_LOC.DSGN_GLBL_COORD_PSI, "
-					+ "EPICS.BEAM_LINE_DVC_LOC.DSGN_GLBL_COORD_THETA, "
-					+ "EPICS.BEAM_LINE_DVC_LOC.DIST_FROM_STRT, "
-					+ "EPICS.BEAM_LINE_DVC_LOC.PHYS_LNGTH "
-					+ "FROM EPICS.DVC, " + "EPICS.BEAM_LINE_DVC_LOC "
+					+ "EPICS.BEAM_LINE_DVC.DSGN_USAGE_IND, "
+					+ "EPICS.BEAM_LINE_DVC.GLBL_COORD_X, "
+					+ "EPICS.BEAM_LINE_DVC.GLBL_COORD_Y, "
+					+ "EPICS.BEAM_LINE_DVC.GLBL_COORD_Z, "
+					+ "EPICS.BEAM_LINE_DVC.GLBL_COORD_PITCH, "
+					+ "EPICS.BEAM_LINE_DVC.GLBL_COORD_YAW, "
+					+ "EPICS.BEAM_LINE_DVC.GLBL_COORD_ROLL, "
+					+ "EPICS.BEAM_LINE_DVC.DIST_FROM_START, "
+					+ "EPICS.BEAM_LINE_DVC.PHYS_LENGTH "
+					+ "FROM EPICS.DVC, " + "EPICS.BEAM_LINE_DVC "
 					+ "where (EPICS.DVC.DVC_TYPE_ID IN ('RF')) "
-					+ "and EPICS.DVC.Dvc_id = EPICS.BEAM_LINE_DVC_LOC.Dvc_id "
-					+ "and EPICS.BEAM_LINE_DVC_LOC.DSGN_USAGE_IND = 'Y' "
-					+ "order by EPICS.BEAM_LINE_DVC_LOC.Dist_From_Strt");
+					+ "and EPICS.DVC.Dvc_id = EPICS.BEAM_LINE_DVC.Dvc_id "
+					+ "and EPICS.BEAM_LINE_DVC.DSGN_USAGE_IND = 'Y' "
+					+ "order by EPICS.BEAM_LINE_DVC.Dist_From_Start");
 			while (rsetRfq.next()) {
 				System.out.println(rsetRfq.getString("DVC_ID"));
 				str = str.concat("    <node type=\"RF\" id=\""
 						+ rsetRfq.getString("DVC_ID") + "\"" + " pos=\""
-						+ rsetRfq.getString("DIST_FROM_STRT") + "\">\n"
+						+ rsetRfq.getString("DIST_FROM_START") + "\">\n"
 						+ "    </node>\n");
 			}
 			rsetRfq.close();
@@ -1639,27 +1295,27 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 		boolean seqAttTag;
 		// Select from tables... We have to deal with DTL in a different
 		// way because of the PMQs
-		if (sequences[k].equals("DTL1") || sequences[k].equals("DTL2") || sequences[k].equals("DTL3") || sequences[k].equals("DTL4") || sequences[k].equals("DTL5") || sequences[k].equals("DTL6") || sequences[k].equals("CCL1") || sequences[k].equals("CCL2") || sequences[k].equals("CCL3") || sequences[k].equals("CCL4")) {
+		if (sequences[k].equals("DTL") || sequences[k].equals("DTL1") || sequences[k].equals("DTL2")) {
 			// add DTL sequence attributes
-			rsetDTLs = stmt.executeQuery( "SELECT * FROM EPICS.DVC a, EPICS.RF_CAV_DVC b, EPICS.BEAM_LINE_DVC_LOC c, EPICS.DVC_SETTING d, EPICS.FUNC_DVC_GRP_ITEM e where a.Dvc_id = b.Dvc_id and a.Dvc_id = d.Dvc_id and c.SEQ_NM='" + sequences[k] + "' and a.Dvc_id = c.Dvc_id and a.Dvc_id = e.Dvc_id(+) and c.DSGN_USAGE_IND = 'Y' " );
+			rsetDTLs = stmt.executeQuery( "SELECT * FROM EPICS.DVC a, EPICS.RF_DVC b, EPICS.BEAM_LINE_DVC c, EPICS.DVC_SET d where a.Dvc_id = b.Dvc_id and a.Dvc_id = d.Dvc_id and c.SEQ_NM='" + sequences[k] + "' and a.Dvc_id = c.Dvc_id and c.DSGN_USAGE_IND = 'Y' " );
 
 			String cavID = null;
 			while (rsetDTLs.next()) {
                 final String deviceID = rsetDTLs.getString( "DVC_ID" );
-                final String cavityNumber = deviceID.substring( deviceID.indexOf("Cav") + 3 );
+//                final String cavityNumber = deviceID.substring( deviceID.indexOf("Cav") + 3 );
 
 				if (!deviceID.equals(cavID)) {
 					str = str.concat("      <rfcavity ");
-					if (rsetDTLs.getString("SETTING_ID").equals("MV/m"))
+					if (rsetDTLs.getString("SETTING_ID").equals("Amp"))
 						str = str.concat(" amp=\"" + rsetDTLs.getString("SETTING_VALUE") + "\"");
-					if (rsetDTLs.getString("SETTING_ID").equals("deg"))
+					if (rsetDTLs.getString("SETTING_ID").equals("Phase"))
 						str = str.concat(" phase=\"" + rsetDTLs.getString("SETTING_VALUE") + "\"");
 					seqAttTag = false;
 				} 
                 else {
-					if (rsetDTLs.getString("SETTING_ID").equals("MV/m"))
+					if (rsetDTLs.getString("SETTING_ID").equals("Amp"))
 						str = str.concat(" amp=\"" + rsetDTLs.getString("SETTING_VALUE") + "\"");
-					if (rsetDTLs.getString("SETTING_ID").equals("deg"))
+					if (rsetDTLs.getString("SETTING_ID").equals("Phase"))
 						str = str.concat(" phase=\"" + rsetDTLs.getString("SETTING_VALUE") + "\"");
 					str = str.concat(" freq=\""
 							+ rsetDTLs.getString("DSGN_FREQ") + "\"\n"
@@ -1700,8 +1356,8 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 							+ "   </attributes>\n");
 
 					seqAttTag = false;
-                    final String fcm = rsetDTLs.getString("RELATED_DVC");
-                
+                    final String fcm = rsetDTLs.getString("DVC_ID");//对于XiPAF使用DVC_ID即可，原为RELATED_DVC
+                    //后续打算使用channel表格中的数据，这样方便控制使用哪些pv。
 
 					str = str.concat("   <channelsuite name=\"rfsuite\">\n"
 									+ "        <channel handle=\"cavAmpSet\" signal=\"" + fcm + ":CtlAmpSet\" settable=\"true\"/>\n"
@@ -1719,7 +1375,7 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 				cavID = rsetDTLs.getString("DVC_ID");
 
 				if (seqAttTag) {
-                    final String fcm = rsetDTLs.getString("RELATED_DVC");
+                    final String fcm = rsetDTLs.getString("DVC_ID");//对于XiPAF使用DVC_ID即可，原为RELATED_DVC
 					str = str.concat("      <rfcavity "
 									+ " freq=\""
 									+ rsetDTLs.getString("DSGN_FREQ")
@@ -1795,7 +1451,6 @@ public class Db2XalDocument extends AcceleratorDocument implements DataListener 
 	 */
 	public void makeMainWindow() {
 		mainWindow = new Db2XalWindow(this);
-
 		if (getSource() != null) {
 			XmlDataAdaptor xda = XmlDataAdaptor.adaptorForUrl(getSource(),
 					false);

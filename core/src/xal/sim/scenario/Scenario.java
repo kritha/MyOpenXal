@@ -17,6 +17,7 @@ import xal.smf.AcceleratorNode;
 import xal.smf.AcceleratorSeq;
 import xal.smf.Ring;
 
+import java.awt.print.Printable;
 import java.util.List;
 import java.util.Map;
 
@@ -147,23 +148,23 @@ public class Scenario {
      */
     
     /** The model lattice that we are managing */
-    private Lattice                         lattice;
+    protected Lattice                         lattice;
     
     /** Synchronization manager synchronizing the model lattice parameters to the synchronization source */
-    private final SynchronizationManager    mgrSync;
+    protected final SynchronizationManager    mgrSync;
     
     /** Back reference to the hardware that this scenario model - CKA: I really want to eliminate this */
-    private final AcceleratorSeq            smfSeq;
+    protected final AcceleratorSeq            smfSeq;
 
     
     /** Current probe driving the simulation through the model lattice */
-    private Probe<?>                        probe;
+    protected Probe<?>                        probe;
     
     /** element from which to start propagation */
-    private String idElemStart = null;
+    protected String idElemStart = null;
     
     /** element at which to stop propagation */
-    private String idElemStop = null;
+    protected String idElemStop = null;
 
     
     /**
@@ -173,7 +174,15 @@ public class Scenario {
     private boolean     bolInclStopElem = true;
     
     
-    /** 
+    public boolean isInclStopElem() {
+		return bolInclStopElem;
+	}
+
+//	public void setBolInclStopElem(boolean bolInclStopElem) {
+//		this.bolInclStopElem = bolInclStopElem;
+//	}
+
+	/** 
      * Constructor 
      */
     protected Scenario( final AcceleratorSeq smfSeq, final Lattice mdlLattice, final SynchronizationManager mgrSync ) {
@@ -342,7 +351,7 @@ public class Scenario {
         if (probe == null)
             throw new IllegalStateException(
                 "must initialize probe before running model");
-        
+        //System.out.println(mgrSync);
         // TODO - remove debugging code
 //        System.out.println("HO HO HO I am in xal.sim.Scenario#run()");
 //        System.out.println("  getStartElementId() = " + this.getStartElementId());

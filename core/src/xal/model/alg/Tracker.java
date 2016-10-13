@@ -17,11 +17,17 @@ import xal.model.IAlgorithm;
 import xal.model.IElement;
 import xal.model.IProbe;
 import xal.model.ModelException;
+import xal.model.elem.IdealMagSectorDipole2;
+import xal.model.elem.Marker;
+import xal.model.elem.TDIdealMagWedgeDipole2;
+import xal.model.elem.TDIdealRfGap;
 import xal.sim.scenario.AlgorithmFactory;
 import xal.smf.AcceleratorSeq;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import com.cosylab.gui.components.wheelswitch.StaticDigit;
 
 
 
@@ -131,6 +137,12 @@ public abstract class Tracker implements IAlgorithm, IArchive {
      
      /** save state at element exit and entrance */
      public static final int    UPDATE_ENTRANCEANDEXIT = 6;
+     
+     /** do not save state */
+     public static final int    UPDATE_NULL = 8;
+     
+     /** save state at diagnostic element */
+     public static final int    UPDATE_DIAG = 16;
      
      
      
@@ -747,13 +759,22 @@ public abstract class Tracker implements IAlgorithm, IArchive {
 //     sako *** IMPORTANT CHANGES
 //        this is now moved to Element.propagate this.setElemPosition(0.0);
         
+       //下面这部分判断是否在入口前保存束流状态，20160520注释掉
         if ((this.getProbeUpdatePolicy() & Tracker.UPDATE_ENTRANCE) == Tracker.UPDATE_ENTRANCE)
             probe.update();
               
         doPropagation(probe, elem);
         
-        if ((this.getProbeUpdatePolicy() & Tracker.UPDATE_EXIT) == Tracker.UPDATE_EXIT)
-            probe.update();
+      //下面这部分判断是否在出口前保存束流状态，默认是在出口保存状态参数，20160520注释掉
+        if ((this.getProbeUpdatePolicy() & Tracker.UPDATE_EXIT) == Tracker.UPDATE_EXIT){
+        	probe.update();
+        }
+        //注释掉下面句子以用来每隔1000圈保存一次状态参数，否则是每个BPM处保存参数
+//        
+//        if (elem instanceof Marker) {
+//    		probe.update();
+//		}
+            
     };
 
     
@@ -780,6 +801,7 @@ public abstract class Tracker implements IAlgorithm, IArchive {
         
         // Get the algorithm class name from the EditContext
         DataTable     tblAlgorithm = ecTableData.getTable( Tracker.TBL_LBL_ALGORITHM );
+        //System.out.println(tblAlgorithm);
         GenericRecord recTracker = tblAlgorithm.record( Tracker.TBL_PRIM_KEY_NAME,  strPrimKeyVal );
 
         if ( recTracker == null ) {
@@ -885,6 +907,10 @@ public abstract class Tracker implements IAlgorithm, IArchive {
     protected void advanceProbe(IProbe probe, IElement elem, double dblLen) 
         throws ModelException 
     {
+//    	if (elem instanceof TDIdealRfGap) {
+//			System.out.println("this is a RF gap");
+//			System.out.println(elem.transferMap(probe, dblLen).getFirstOrder());
+//		}
 
         // Initial conditions of the probe
         double  s0   = probe.getPosition();
@@ -913,8 +939,11 @@ public abstract class Tracker implements IAlgorithm, IArchive {
         this.setElemPosition(this.getElemPosition() + dL);
 
         // Update probe trajectory
-        if (this.getProbeUpdatePolicy() == Tracker.UPDATE_ALWAYS)
+        if (this.getProbeUpdatePolicy() == Tracker.UPDATE_ALWAYS){
             probe.update();
+        }else if(this.getProbeUpdatePolicy()==Tracker.UPDATE_DIAG && elem instanceof Marker){
+        	probe.update();
+        }//any else do not update
     };
     
     /** 

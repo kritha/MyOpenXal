@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ClassDiagram>
+    <Class name="xal.app.myva.TrimmedQuadrupoleProcessor" x="720" y="29">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.app.myva.NodeSignalProcessor"/>
+        <Communication destinationClassName="xal.app.myva.SignalProcessor"/>
+    </Class>
+    <Class name="xal.app.myva.DipoleCorrectorProcessor" x="309" y="28">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.app.myva.NodeSignalProcessor"/>
+        <Communication destinationClassName="xal.app.myva.SignalProcessor"/>
+    </Class>
+    <Class name="xal.app.myva.UnipolarEMProcessor" x="305" y="286">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.app.myva.NodeSignalProcessor"/>
+        <Communication destinationClassName="xal.app.myva.SignalProcessor"/>
+    </Class>
+    <Class name="xal.app.myva.NodeSignalProcessor" x="569" y="205">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.app.myva.SignalProcessor"/>
+    </Class>
+    <Class name="xal.app.myva.TimingCenterProcessor" x="820" y="248">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.app.myva.SignalProcessor"/>
+    </Class>
+    <Class name="xal.app.myva.VADocument" x="299" y="414">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Association
+            destinationClassName="xal.app.myva.ReadbackSetRecord"
+            endpointName="READBACK_SET_RECORDS" kind="Simple"/>
+        <Association destinationClassName="xal.app.myva.DiagPlot"
+            endpointName="_diagplot" kind="Simple"/>
+        <Association destinationClassName="xal.app.myva.VAServer"
+            endpointName="_vaServer" kind="Simple"/>
+        <Communication destinationClassName="xal.app.myva.NoiseGenerator"/>
+        <Communication destinationClassName="xal.app.myva.ReadbackSetRecord"/>
+        <Communication destinationClassName="xal.app.myva.VAServer"/>
+        <Communication destinationClassName="xal.app.myva.DiagPlot"/>
+    </Class>
+    <Class name="xal.app.myva.ReadbackSetRecord" x="999" y="933">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Communication destinationClassName="xal.app.myva.NoiseGenerator"/>
+    </Class>
+    <Class name="xal.app.myva.Main" x="1006" y="1255">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Communication destinationClassName="xal.app.myva.VADocument"/>
+    </Class>
+    <Class name="xal.app.myva.ProfileMonitorProcessor" x="815" y="171">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.app.myva.NodeSignalProcessor"/>
+    </Class>
+    <Class name="xal.app.myva.WireScanner2Processor" x="819" y="94">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.app.myva.NodeSignalProcessor"/>
+    </Class>
+    <Class name="xal.app.myva.ReadbackSetRecordPositionComparator"
+        x="998" y="781">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+    </Class>
+    <Class name="xal.app.myva.BPMProcessor" x="305" y="230">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.app.myva.NodeSignalProcessor"/>
+        <Communication destinationClassName="xal.app.myva.SignalProcessor"/>
+        <Communication destinationClassName="xal.app.myva.SignalEntry"/>
+    </Class>
+    <Class name="xal.app.myva.DiagPlot" x="990" y="414">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+    </Class>
+    <Class name="xal.app.myva.SextupoleProcessor" x="305" y="161">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.app.myva.NodeSignalProcessor"/>
+        <Communication destinationClassName="xal.app.myva.SignalProcessor"/>
+    </Class>
+    <Class name="xal.app.myva.NoiseGenerator" x="1001" y="1163">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+    </Class>
+    <Class name="xal.app.myva.WireScannerProcessor" x="524" y="29">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.app.myva.NodeSignalProcessor"/>
+    </Class>
+    <Class name="xal.app.myva.VAServer" x="54" y="412">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Communication destinationClassName="xal.app.myva.NodeSignalProcessor"/>
+        <Communication destinationClassName="xal.app.myva.TimingCenterProcessor"/>
+    </Class>
+    <Class name="xal.app.myva.SignalProcessor" x="655" y="330">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+    </Class>
+    <Class name="xal.app.myva.SignalEntry" x="52" y="138">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+    </Class>
+    <Class name="xal.app.myva.BendProcessor" x="309" y="95">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.app.myva.NodeSignalProcessor"/>
+        <Communication destinationClassName="xal.app.myva.SignalProcessor"/>
+    </Class>
+</ClassDiagram>

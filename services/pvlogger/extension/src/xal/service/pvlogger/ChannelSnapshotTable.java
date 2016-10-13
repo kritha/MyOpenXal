@@ -57,6 +57,7 @@ class ChannelSnapshotTable {
 		TABLE_NAME = configuration.getTableName();
 
 		MACHINE_SNAPSHOT_COLUMN = configuration.getColumn( "machineSnapshot" );
+		//获得表格的某一列，参数为COLUMN_ATTRIBUTE_MAP的键
 		PV_COLUMN = configuration.getColumn( "pv" );
 
 		TIMESTAMP_COLUMN = configuration.getColumn( "timestamp" );

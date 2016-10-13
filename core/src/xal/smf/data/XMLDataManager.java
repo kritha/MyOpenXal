@@ -395,7 +395,7 @@ public class XMLDataManager {
     /** 
      * update the accelerator with data from the optics URL with a
      * DTD validation flag
-	 * @param accelerator The accelerato to update with data from the sources
+	 * @param accelerator The accelerator to update with data from the sources
 	 * @param isValidating use DTD validation if true and don't validate if false
      */    
     public void updateOptics(Accelerator accelerator, boolean isValidating) throws XmlDataAdaptor.ParseException {

@@ -470,7 +470,7 @@ public final class AlgorithmFactory {
         String          strSeqId  = smfSeq.getId();
         Accelerator     smfAccel  = smfSeq.getAccelerator();
         EditContext     ctxParams = smfAccel.editContext();
-        
+//        System.out.println(ctxParams);
         T algTracker;
         try {
             algTracker = clsTkr.newInstance();

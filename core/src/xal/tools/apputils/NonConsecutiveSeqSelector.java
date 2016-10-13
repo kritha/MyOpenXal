@@ -43,6 +43,14 @@ public class NonConsecutiveSeqSelector implements ActionListener {
 		table.setPreferredScrollableViewportSize(new Dimension(300, 500));
 
 	}
+	
+	public JTable geTable() {
+		return table;
+	}
+	
+	public MyTableModel geTableModel() {
+		return myModel;
+	}
 
 	public JDialog selectSequence() {
 		sequenceDialog = new JDialog();
@@ -106,33 +114,17 @@ public class NonConsecutiveSeqSelector implements ActionListener {
 		return seqList;
 	}
 
-	class MyTableModel extends AbstractTableModel {
+	public class MyTableModel extends AbstractTableModel {
         /** serialization ID */
         private static final long serialVersionUID = 1L;
 		final String[] columnNames = { "Sequence", "Selected" };
-
-		final Object[][] data = { { "LEBT", new Boolean(false) },
-				{ "RFQ", new Boolean(false) }, { "MEBT", new Boolean(false) },
-				{ "DTL1", new Boolean(false) }, { "DTL2", new Boolean(false) },
-				{ "DTL3", new Boolean(false) }, { "DTL4", new Boolean(false) },
-				{ "DTL5", new Boolean(false) }, { "DTL6", new Boolean(false) },
-				{ "CCL1", new Boolean(false) }, { "CCL2", new Boolean(false) },
-				{ "CCL3", new Boolean(false) }, { "CCL4", new Boolean(false) },
-				{ "SCLMed", new Boolean(false) },
-				{ "SCLHigh", new Boolean(false) },
-				{ "HEBT1", new Boolean(false) },
-				{ "LDmp", new Boolean(false) },
-				{ "HEBT2", new Boolean(false) }, { "MDmp", new Boolean(false) },
-				{ "IDmp-", new Boolean(false) },
-				{ "IDmp+", new Boolean(false) },
-				{ "Ring1", new Boolean(false) },
-				{ "Ring2", new Boolean(false) },
-				{ "Ring3", new Boolean(false) },
-				{ "Ring4", new Boolean(false) },
-				{ "Ring5", new Boolean(false) },
-				{ "RTBT1", new Boolean(false) },
-				{ "RTBT2", new Boolean(false) },
-				{ "EDmp", new Boolean(false) }
+		//杨业根据XiPAF加速器序列，修改于20160907
+		public final Object[][] data = { { "LEBT", new Boolean(false) },
+				{ "RFQ", new Boolean(false) }, { "DTL", new Boolean(false) },
+				{ "MEBT", new Boolean(false) }, { "RING1", new Boolean(false) },
+				{ "RING2", new Boolean(false) }, { "HEBT", new Boolean(false) },
+				{ "T1", new Boolean(false) }, { "T2", new Boolean(false) },
+				{ "LDmp", new Boolean(false) }, { "HDmp", new Boolean(false) }
 		};
 
 		public int getColumnCount() {

@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ClassDiagram>
+    <Class name="xal.smf.data.XMLDataManager.TableManager" x="10" y="586">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Communication destinationClassName="xal.smf.data.XMLDataManager"/>
+    </Class>
+    <Class name="xal.smf.data.TimingDataManager" x="871" y="423">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+    </Class>
+    <Class name="xal.smf.data.OpticsSelectionEditor" x="462" y="14">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Association
+            destinationClassName="xal.smf.data.AcceleratorChooser"
+            endpointName="ACCELERATOR_CHOOSER" kind="Simple"/>
+        <Communication destinationClassName="xal.smf.data.AcceleratorChooser"/>
+    </Class>
+    <Class name="xal.smf.data.BucketParser" x="868" y="588">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+    </Class>
+    <Class name="xal.smf.data.OpticsSwitcher" x="716" y="259">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Association
+            destinationClassName="xal.smf.data.OpticsSelectionEditor"
+            endpointName="SELECTION_EDITOR" kind="Simple"/>
+        <Communication destinationClassName="xal.smf.data.OpticsSelectionEditor"/>
+        <Communication destinationClassName="xal.smf.data.AcceleratorChooser"/>
+    </Class>
+    <Class name="xal.smf.data.AcceleratorChooser" x="856" y="35">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Communication destinationClassName="xal.smf.data.XMLDataManager"/>
+    </Class>
+    <Class name="xal.smf.data.XMLDataManager" x="305" y="211">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Association
+            destinationClassName="xal.smf.data.XMLDataManager.AcceleratorManager"
+            endpointName="acceleratorManager" kind="Simple"/>
+        <Association
+            destinationClassName="xal.smf.data.TimingDataManager"
+            endpointName="TIMING_MANAGER" kind="Simple"/>
+        <Association
+            destinationClassName="xal.smf.data.XMLDataManager.TableManager"
+            endpointName="tableManager" kind="Simple"/>
+        <Association
+            destinationClassName="xal.smf.data.XMLDataManager.DeviceManager"
+            endpointName="DEVICE_MANAGER" kind="Simple"/>
+        <Association
+            destinationClassName="xal.smf.data.XMLDataManager.MainManager"
+            endpointName="mainManager" kind="Simple"/>
+        <Communication destinationClassName="xal.smf.data.XMLDataManager.TableManager"/>
+        <Communication destinationClassName="xal.smf.data.TimingDataManager"/>
+        <Communication destinationClassName="xal.smf.data.XMLDataManager.AcceleratorManager"/>
+        <Communication destinationClassName="xal.smf.data.XMLDataManager.DeviceManager"/>
+        <Communication destinationClassName="xal.smf.data.XMLDataManager.MainManager"/>
+    </Class>
+    <Class name="xal.smf.data.XMLDataManager.AcceleratorManager" x="430" y="588">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Communication destinationClassName="xal.smf.data.XMLDataManager.TableManager"/>
+        <Communication destinationClassName="xal.smf.data.XMLDataManager"/>
+    </Class>
+    <Class name="xal.smf.data.XMLDataManager.MissingUrlForGroup" x="14" y="232">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+    </Class>
+    <Class name="xal.smf.data.XMLDataManager.DeviceManager" x="40" y="53">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+    </Class>
+    <Class name="xal.smf.data.XMLDataManager.MainManager" x="9" y="356">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Communication destinationClassName="xal.smf.data.XMLDataManager.TableManager"/>
+        <Communication destinationClassName="xal.smf.data.TimingDataManager"/>
+        <Communication destinationClassName="xal.smf.data.XMLDataManager"/>
+        <Communication destinationClassName="xal.smf.data.XMLDataManager.AcceleratorManager"/>
+        <Communication destinationClassName="xal.smf.data.XMLDataManager.DeviceManager"/>
+    </Class>
+</ClassDiagram>

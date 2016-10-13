@@ -411,7 +411,10 @@ public class CalculationsOnMachines extends CalculationEngine  implements ISimLo
     public PhaseVector computeFixedOrbit(TransferMapState state) {
         PhaseMatrix matFullTrn = this.calculateFullLatticeMatrixAt(state);
         PhaseVector vecFixedPt = super.calculateFixedPoint(matFullTrn);
-        
+        if (state.getElementId().equals("RING_Diag:BPM02")) {
+			System.out.println("full transfer map at BPM02: "+matFullTrn);
+			System.out.println("closed orbit: "+vecFixedPt);
+		}
         return vecFixedPt; 
     }
 

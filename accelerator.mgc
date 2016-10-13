@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ClassDiagram>
+    <Class name="xal.smf.AcceleratorNodeFactory" x="667" y="17">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+    </Class>
+    <Class name="xal.smf.AcceleratorSector" x="815" y="729">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.smf.AcceleratorSeq"/>
+        <Communication destinationClassName="xal.smf.AcceleratorNode"/>
+    </Class>
+    <Class name="xal.smf.Accelerator" x="678" y="178">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.smf.AcceleratorSeq"/>
+        <Association
+            destinationClassName="xal.smf.AcceleratorNodeFactory"
+            endpointName="_nodeFactory" kind="Simple"/>
+        <Association destinationClassName="xal.smf.AcceleratorSeqCombo"
+            endpointName="_comboSequences" kind="Simple"/>
+        <Communication destinationClassName="xal.smf.AcceleratorNode"/>
+        <Communication destinationClassName="xal.smf.AcceleratorSeqCombo"/>
+        <Communication destinationClassName="xal.smf.AcceleratorSeq"/>
+    </Class>
+    <Class name="xal.smf.AcceleratorNode" x="213" y="20">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Association destinationClassName="xal.smf.Accelerator"
+            endpointName="m_objAccel" kind="Simple"/>
+        <Association destinationClassName="xal.smf.AcceleratorSeq"
+            endpointName="m_seqParent" kind="Simple"/>
+        <Communication destinationClassName="xal.smf.Accelerator"/>
+        <Communication destinationClassName="xal.smf.AcceleratorSeq"/>
+    </Class>
+    <Class name="xal.smf.AcceleratorSeqCombo" x="888" y="563">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.smf.AcceleratorSeq"/>
+        <Association destinationClassName="xal.smf.AcceleratorSeq"
+            endpointName="_baseConstituents" kind="Simple"/>
+        <Association destinationClassName="xal.smf.AcceleratorSeq"
+            endpointName="_dummyMap" kind="Simple"/>
+        <Association destinationClassName="xal.smf.AcceleratorSeq"
+            endpointName="_constituents" kind="Simple"/>
+        <Communication destinationClassName="xal.smf.AcceleratorNode"/>
+        <Communication destinationClassName="xal.smf.AcceleratorSeq"/>
+    </Class>
+    <Class name="xal.smf.AcceleratorSeq" x="87" y="629">
+        <AttributesDisplayFilter public-accepted="true"
+            private-accepted="true" protected-accepted="true"
+            default-accepted="true" static-accepted="false"/>
+        <MethodDisplayFilter public-accepted="true"
+            private-accepted="false" protected-accepted="false"
+            default-accepted="false" static-accepted="false"
+            accessors-accepted="false" constructors-accepted="false"/>
+        <Extension destinationClassName="xal.smf.AcceleratorNode"/>
+        <Association destinationClassName="xal.smf.AcceleratorNode"
+            endpointName="m_arrNodes" kind="Simple"/>
+        <Association destinationClassName="xal.smf.AcceleratorNode"
+            endpointName="nodeTable" kind="Simple"/>
+        <Association destinationClassName="xal.smf.AcceleratorSeq"
+            endpointName="_sequences" kind="Simple"/>
+        <Communication destinationClassName="xal.smf.AcceleratorNodeFactory"/>
+        <Communication destinationClassName="xal.smf.Accelerator"/>
+        <Communication destinationClassName="xal.smf.AcceleratorNode"/>
+    </Class>
+</ClassDiagram>

@@ -443,25 +443,27 @@ public class IdealRfGap extends ThinElement implements IRfGap {
 		double stf_prime = 0.01*SPrimeFit.evaluateAt(bi);
 		double freq = getFrequency();
 //		double phi_gap = phi0;
-		double dE_gap = Q*EL*(ttf*Math.cos(phi0) + stf*Math.sin(phi0))/2.0;
+		double dE_gap = Q*EL*(ttf*Math.cos(phi0) + stf*Math.sin(phi0))/2.0;//中间应该是减号吧，qVTcosfai-qvSsinfai，除以2表示gap中心的数值
 		double b_gap0 = Math.sqrt(1.-Er*Er/((Er+Wi+dE_gap)*(Er+Wi+dE_gap)));	
 		double k_gap0 = 2*Math.PI*freq/(b_gap0*IElement.LightSpeed);	
 		double gamma_gap = Math.sqrt(1./(1.-b_gap0*b_gap0));
 		double b_gap = b_gap0;
 		double k_gap = k_gap0;
+		//貌似这里符号也是反的，难道S的定义加了负号？
 		double dlt_phi = (Q*EL/(Er*gamma_gap*gamma_gap*gamma_gap*b_gap*b_gap))*k_gap*(ttf_prime*Math.sin(phi0) - stf_prime*Math.cos(phi0))/2.0;
+		
     for( int i = 0; i < 3; i++){
 			b_gap = Math.sqrt(1.-Er*Er/((Er+Wi+dE_gap)*(Er+Wi+dE_gap)));	
 			k_gap = 2*Math.PI*freq/(b_gap*IElement.LightSpeed);	
 			gamma_gap = Math.sqrt(1./(1.-b_gap*b_gap));
 			dE_gap = Q*EL*((ttf + ttf_prime*(k_gap - k_gap0))*Math.cos(phi0+dlt_phi) + (stf + stf_prime*(k_gap - k_gap0))*Math.sin(phi0+dlt_phi))/2.0;
 			dlt_phi = (Q*EL/(Er*gamma_gap*gamma_gap*gamma_gap*b_gap*b_gap))*k_gap*(ttf_prime*Math.sin(phi0+dlt_phi) - stf_prime*Math.cos(phi0+dlt_phi))/2.0;
-		}
+		}//迭代计算三次，使得计算结果尽可能准确，对于有能散的粒子，还要考虑能散的影响，参考wangler p209
 		//System.out.println("Stop "+this.getId() + "dlt_phi ="+(180*dlt_phi/Math.PI)+" bi="+bi+" b_gap="+b_gap+" dE_gap="+dE_gap+" Wi="+Wi);
 		//the energy gaine and phase are known
 		//now we calculate the total energy gain and phase
-		theEnergyGain = Q*EL*((ttf + ttf_prime*(k_gap - k_gap0))*Math.cos(phi0+dlt_phi));
-		deltaPhaseCorrection = (Q*EL/(Er*gamma_gap*gamma_gap*gamma_gap*b_gap*b_gap))*k_gap*(ttf_prime*Math.sin(phi0+dlt_phi));		
+		theEnergyGain = Q*EL*((ttf + ttf_prime*(k_gap - k_gap0))*Math.cos(phi0+dlt_phi));//stf怎么又被吃掉了？！
+		deltaPhaseCorrection = (Q*EL/(Er*gamma_gap*gamma_gap*gamma_gap*b_gap*b_gap))*k_gap*(ttf_prime*Math.sin(phi0+dlt_phi));//stf怎么又被吃掉了？！		
 		
 		//System.out.println(this.getId() + " " + (Math.IEEEremainder(phi0 * 57.295779, 360.)) + "  " + Wi + "  " + theEnergyGain);
 	}
@@ -503,8 +505,27 @@ public class IdealRfGap extends ThinElement implements IRfGap {
 
 		double dW = this.energyGain(probe);
 
-		double kz = this.compLongFocusing(probe);
-		double kt = this.compTransFocusing(probe);
+		//下面计算横向和纵向的聚焦常数
+		double Wbar = Wi + dW / 2.0;
+		double gbar = Wbar / Er + 1.0;
+
+//		double kt = this.compTransFocusing(probe);
+		double bbar = Math.sqrt(1.0 - 1.0 / (gbar * gbar));
+		double bgbar = bbar * gbar;
+
+		double c = IElement.LightSpeed;
+		double Q = Math.abs(probe.getSpeciesCharge());
+		double ETL = this.getETL();
+		double phi = this.getPhase();
+//		double f = this.getFrequency();20160524注释，发现f的单位为MHz，否则计算出来结果要小6个数量级，导致纵向振荡非常缓慢
+		//OpenXAL会将输入文件中以MHz为单位的频率转化为以hz为单位，调用但在IdealRfgap中的成员f以hz为单位，这个需要注意
+		double f = this.getFrequency();
+
+		double kt = Math.PI * Q * ETL * f * Math.sin(-phi) / (c * Er * bgbar * bgbar);
+		double kz = -2.0 * kt * gbar * gbar;
+//		System.out.println(kz);
+//		double kz = this.compLongFocusing(probe);
+//		double kt = this.compTransFocusing(probe);
 
 		// Compute final energy parameters
 		double Wf = Wi + dW;
@@ -524,7 +545,9 @@ public class IdealRfGap extends ThinElement implements IRfGap {
 		// CKA - Corrected 7/14/2010
 		//  Additional factor gbar^2 in the longitudinal focusing term 
 //		double arrLong[][] = new double[][]{{1.0, 0.0}, {(kz / (bf * gf)) * gb * gb / (gf * gf), gi * gi * gi * bi / (gf * gf * gf * bf)}};
-        double arrLong[][] = new double[][]{{1.0, 0.0}, { kz / (bf * gf * gf * gf), gi * gi * gi * bi / (gf * gf * gf * bf)}};
+//      我觉得下面的传输矩阵还是有问题，应该和横向是一样的（纵向为z和δ的时候），但好像这里用的zprime，所以原来是对的
+		double arrLong[][] = new double[][]{{1.0, 0.0}, { kz / (bf * gf * gf * gf), gi * gi * gi * bi / (gf * gf * gf * bf)}};
+//      double arrLong[][] = new double[][]{{1.0, 0.0}, { kz / (bf * gf), gi * bi / (gf * bf)}};
 
 		PhaseMatrix matPhi = new PhaseMatrix();
 
@@ -610,6 +633,7 @@ public class IdealRfGap extends ThinElement implements IRfGap {
 
 		double ETL = this.getETL();
 		double phi = this.getPhase();
+//		double f = this.getFrequency();20160524注释，发现f的单位为MHz，否则计算出来结果要小6个数量级，导致纵向振荡非常缓慢
 		double f = this.getFrequency();
 
 //        double   kr = Math.PI*Q*ETL*f*Math.sin(-phi)/(q*c*Er*bgbar*bgbar);

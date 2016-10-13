@@ -20,7 +20,16 @@ import xal.model.IComposite;
 import xal.model.IElement;
 import xal.model.Lattice;
 import xal.model.ModelException;
-import xal.model.elem.IdealRfGap;
+import xal.model.elem.DipoleWaveForm;
+import xal.model.elem.GapWaveForm;
+import xal.model.elem.IdealMagDipoleFace2;
+import xal.model.elem.IdealMagSectorDipole2;
+import xal.model.elem.IdealMagWedgeDipole2;
+import xal.model.elem.QuadWaveForm;
+import xal.model.elem.TDIdealMagQuad;
+import xal.model.elem.TDIdealMagWedgeDipole2;
+import xal.model.elem.TDIdealRfGap;
+import xal.model.elem.TDSpectrumMapRfGap;
 import xal.sim.sync.SynchronizationManager;
 import xal.smf.Accelerator;
 import xal.smf.AcceleratorNode;
@@ -84,6 +93,16 @@ public class LatticeSequence extends LatticeElement implements Iterable<LatticeE
 
     /** indicates whether or not axis coordinate have origin at sequence center */
     private boolean                     bolCtrOrigin;
+    
+    //
+    //ramping parameters
+    //added by yangy in 20160517
+    private final double[] Bparams={0.5,0.49,0.01,0.250682977,1.519627429};
+    private final double[] Qtparams={0.5,0.49,0.01,0.898171056,5.444667155};
+//    private final double[] Qdparams={0.5,0.49,0.01,-0.306412301,-1.857455746};
+//    private final double[] Qtparams={0.5,0.49,0.01,0.923067056,5.595585435};
+    private final double[] Qdparams={0.5,0.49,0.01,-0.306412301,-1.857455746};
+    private final double[] Gapparams={0.5,0.49,0.01,50,500,0.383015376,2.321819682,1178534.580526326,5780526.980850613,30.9};
     
     
     //
@@ -565,6 +584,7 @@ public class LatticeSequence extends LatticeElement implements Iterable<LatticeE
         
         // Split any thick lattice elements where a thin element intersects it.
         //  If two thick elements intersect then we bail out with a ModelException
+        //只有二极铁会分割，其余元件均不分割
         this.splitSequenceElements();
         
         // Search the sequence for all the artificial element that do not have hardware
@@ -895,13 +915,24 @@ public class LatticeSequence extends LatticeElement implements Iterable<LatticeE
 
                 // If none and the current element is thin add it directly to  
                 //  the list of split elements.
-                if (lemCurr.isThin()) 
-                    lstSplitElems.add(lemCurr);
+//                if (lemCurr.isThin()) 
+//                    lstSplitElems.add(lemCurr);
+//
+//                // If none and the current element is thick then set it up for processing 
+//                //  next round. 
+//                else 
+//                    lemLastThick = lemCurr;
+            	
+                //只对Dipole进行分割，修改于20160520 杨业
+//            	if(lemCurr.getModelingClass()!=null)
+//            		System.out.println(lemCurr.getModelingClass().getName());
+            	if (lemCurr.getModelingClass()!=null && lemCurr.getModelingClass().getName()=="xal.model.elem.TDIdealMagWedgeDipole2")
+            		lemLastThick = lemCurr;
 
                 // If none and the current element is thick then set it up for processing 
                 //  next round. 
                 else 
-                    lemLastThick = lemCurr;
+                	lstSplitElems.add(lemCurr);
 
                 // Now skip everything else and continue on to the next lattice element in 
                 //  the lattice sequence.
@@ -1132,11 +1163,44 @@ public class LatticeSequence extends LatticeElement implements Iterable<LatticeE
             } else {
 
                 IComponent mdlElemCurr = latElemCurr.createModelingElement();
-                mdlSeqRoot.addChild(mdlElemCurr);
+                mdlSeqRoot.addChild(mdlElemCurr);//通过这一句将所有element添加到IComposite对象，而且组合对象也整体添加进来
 
+                if (mdlElemCurr.isTimeDependent()) {
+                	// add time dependent elements to maps
+					mgrSync.addTimeDependentElementMappedTo(mdlElemCurr, smfNodeCurr);
+					//set ramping curves for time dependent elements
+					if (mdlElemCurr instanceof TDIdealMagQuad) {
+						QuadWaveForm quadWaveForm=((TDIdealMagQuad) mdlElemCurr).getWaveForm();
+						//20160603 add misalignment errors
+						//((TDIdealMagQuad) mdlElemCurr).setAlignX(0.0002);
+						//((TDIdealMagQuad) mdlElemCurr).setAlignY(0.0002);
+						//((TDIdealMagQuad) mdlElemCurr).setAlignZ(0.0002);
+						//System.out.println(quadWaveForm);
+						if (((TDIdealMagQuad) mdlElemCurr).getMagField()>0) {
+							quadWaveForm.setInitParams(Qtparams);//as for focusing quad
+						} else {
+							quadWaveForm.setInitParams(Qdparams);
+						}
+					} else if(mdlElemCurr instanceof TDIdealMagWedgeDipole2){
+						DipoleWaveForm dipoleWaveForm=((TDIdealMagWedgeDipole2) mdlElemCurr).getWaveForm();
+						dipoleWaveForm.setInitParams(Bparams);
+					}else if (mdlElemCurr instanceof TDIdealRfGap) {
+						GapWaveForm gapWaveForm=((TDIdealRfGap) mdlElemCurr).getWaveForm();
+						gapWaveForm.setInitParams(Gapparams);
+					}else {
+						System.out.println("there are some bugs");
+					}
+				}
                 if (mdlElemCurr instanceof IElement) 
                     mgrSync.synchronize((IElement) mdlElemCurr, smfNodeCurr);
-                
+                else if (mdlElemCurr instanceof IdealMagWedgeDipole2){
+                	IdealMagSectorDipole2 sectorDipole2=((IdealMagWedgeDipole2) mdlElemCurr).getMagBody();
+                	IdealMagDipoleFace2 entranceface=((IdealMagWedgeDipole2) mdlElemCurr).getFaceEntr();
+                	IdealMagDipoleFace2 exitface=((IdealMagWedgeDipole2) mdlElemCurr).getFaceExit();
+                	mgrSync.synchronize(sectorDipole2, smfNodeCurr);
+                	mgrSync.synchronize(entranceface, smfNodeCurr);
+                	mgrSync.synchronize(exitface, smfNodeCurr);
+                }
                 // Advance the position of the last processed element
                 dblPosLast = latElemCurr.getEndPosition();
             }

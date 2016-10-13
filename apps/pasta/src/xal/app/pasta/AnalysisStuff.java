@@ -474,7 +474,7 @@ public class AnalysisStuff {
      */
     private double getPhase( ProbeState<? extends ProbeState<?>> state, BPM bpm) {
 	    double freq = bpm.getBPMBucket().getFrequency() * 1.e6;
-	    
+	    freq/=2;
 	    // correction time for electrode being offset from the BPM center:
 	    double gamma = 1. + state.getKineticEnergy()/state.getSpeciesRestEnergy();
 	    double beta = Math.sqrt(1. - 1./(gamma*gamma));
@@ -486,13 +486,17 @@ public class AnalysisStuff {
     
     private double getPhaseAbs(double time, BPM bpm) {
 	    double freq = bpm.getBPMBucket().getFrequency() * 1.e6;
+	    freq/=2;
 	    double phase = (time) * 2. * Math.PI * freq;
 	    phase *= rad2deg;
 	    return phase;
     }
     
     private double getPhase(double time, BPM bpm) {
+	    //double freq = 402.5 * 1.e6;
 	    double freq = bpm.getBPMBucket().getFrequency() * 1.e6;
+	    freq/=2;
+	    //System.out.println(bpm.getBPMBucket().getFrequency());
 	    double phase = (time) * 2. * Math.PI * freq;
 	    phase = (phase % (2. * Math.PI)) * rad2deg;
 	    return phase;
@@ -700,7 +704,8 @@ public class AnalysisStuff {
 							    //System.out.println("Off times = " + BPM1TimeCavOff + "\t" + BPM2TimeCavOff);
 						    }
 					    }
-					    diff += theDoc.BPMPhaseDiffOffset + theDoc.fudgePhaseOffset;  if(theDoc.myWindow().useWrappingButton.isSelected() ){
+					    diff += theDoc.BPMPhaseDiffOffset + theDoc.fudgePhaseOffset;  
+					    if(theDoc.myWindow().useWrappingButton.isSelected() ){
                             if (firstPass) {
                                 firstPass = false;
                                 deltaPhi0 = getPhaseAbs(time2, secondBPM) - getPhaseAbs(time1, firstBPM);

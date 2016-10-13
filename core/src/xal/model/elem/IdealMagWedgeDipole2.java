@@ -652,7 +652,10 @@ public class IdealMagWedgeDipole2 extends ElectromagnetSeq {
      * 
      * @return     entrance pole face
      */
-    private IdealMagDipoleFace2  getFaceEntr()   {
+//    private IdealMagDipoleFace2  getFaceEntr()   {
+//        return this.polEntr;
+//    }
+    public IdealMagDipoleFace2  getFaceEntr()   {
         return this.polEntr;
     }
      
@@ -661,7 +664,10 @@ public class IdealMagWedgeDipole2 extends ElectromagnetSeq {
      * 
      * @return     exit pole face
      */
-    private IdealMagDipoleFace2   getFaceExit()   {
+//    private IdealMagDipoleFace2   getFaceExit()   {
+//        return this.polExit;
+//    }
+    public IdealMagDipoleFace2   getFaceExit()   {
         return this.polExit;
     }
      
@@ -672,8 +678,12 @@ public class IdealMagWedgeDipole2 extends ElectromagnetSeq {
      * 
      * @return     magnet body
      */
-    private IdealMagSectorDipole2    getMagBody()    {
+//    private IdealMagSectorDipole2    getMagBody()    {
+//        return this.magBody;
+//    }
+    public IdealMagSectorDipole2    getMagBody()    {
         return this.magBody;
     }
+    
 
 }

@@ -10,6 +10,7 @@ package xal.model.elem;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -19,7 +20,11 @@ import xal.model.IComposite;
 import xal.model.IElement;
 import xal.model.IProbe;
 import xal.model.ModelException;
+import xal.model.probe.ParticleProbe;
 import xal.sim.scenario.LatticeElement;
+import xal.sim.sync.SynchronizationManager;
+import xal.smf.AcceleratorNode;
+import xal.tools.beam.PhaseMatrix;
 
 
 
@@ -604,8 +609,90 @@ public abstract class ElementSeq implements IComposite {
      */
     @Override
     public void propagate(IProbe probe) throws ModelException {
+//    	System.out.println(getForwardCompList());
         for(IComponent comp : getForwardCompList()) {
             comp.propagate(probe);
+//            PhaseMatrix phaseMatrix = ((ParticleProbe) probe).getResponseMatrix();
+//    	    System.out.println(comp.getId()+": "+phaseMatrix);
+        }
+    }
+    
+    
+    /**
+     *  Propagate probe through sequence sync parameter every turn
+     *  //add by yangye 20160515
+     *
+     *  @param  probe   the state of the probe will be advance using the elements dynamics
+     *
+     *  @exception  ModelException    an error occurred while advancing the probe state
+     */
+    public void propagate_everyturn(IProbe probe, SynchronizationManager mgrSync) throws ModelException {   	
+    	//System.out.println(mgrSync.getTimeDependentElems().values().getClass());
+//    	for(List<IComponent> eles: mgrSync.getTimeDependentElems().values()){
+//    		for(IComponent ele:eles){
+//    			System.out.println(ele.getClass());
+//    		}
+//    	}
+//    	for(IComponent ele:getForwardCompList()){
+//    		System.out.println(ele.getClass());
+//    	}
+//    	System.out.println(getForwardCompList());
+//    	List<IComponent> components=getForwardCompList();
+//    	System.out.println(components.size());
+        for(IComponent comp : getForwardCompList()) {
+//        	System.out.println(comp.getClass());
+//        	for(IComponent ele:((ElementSeq)comp).m_lstCompsForward){
+//        		System.out.println(ele.getClass());
+//        	}
+        	if (comp instanceof ElementSeq) {
+				((ElementSeq) comp).propagate_everyturn(probe,mgrSync);
+			}else if (comp instanceof TDIdealRfGap) {
+        		//加速腔的参数单独更新
+        		comp.updateParams(probe.getTime());
+        		comp.propagate(probe);
+        		//从加速腔加速玩之后更新磁铁元件参数
+                //final Collection<AcceleratorNode> nodes = mgrSync.getTimeDependentElems().keySet();
+        		//System.out.println(nodes);
+        		
+        		for ( final List<IComponent> elems:mgrSync.getTimeDependentElems().values()) {
+        			//如果需要排除加速腔，需要在这里添加判断，此外该方法最好在经过加速腔后调用
+        			for ( final IComponent elem : elems ) {
+        				elem.updateParams(probe.getTime());//这里会把加速腔参数也更新了，但是没关系，到加速腔还会再更新一次
+        			}
+        		} 
+			} else {
+				comp.propagate(probe);
+			}
+        }
+    }
+    
+    
+    /**
+     *  Propagate probe through sequence sync parameter every turn
+     *  add by yangye 20160515
+     *  @param  probe   the state of the probe will be advance using the elements dynamics
+     *
+     *  @exception  ModelException    an error occurred while advancing the probe state
+     */
+    public void propagate_everynode(IProbe probe) throws ModelException {
+        for(IComponent comp : getForwardCompList()) {
+        	if (comp instanceof ElementSeq) {
+        		if (comp instanceof TDIdealMagWedgeDipole2) {
+					comp.updateParams(probe.getTime());
+				}
+				((ElementSeq) comp).propagate_everynode(probe);
+			}else if (!comp.isTimeDependent()) {
+        		comp.propagate(probe);
+			} else {
+//				if (comp instanceof TDSpectrumMapRfGap) {
+//					System.out.println("this is a TDSpectrumMapRfGap");
+//				}
+				comp.updateParams(probe.getTime());
+				comp.propagate(probe);
+//				System.out.println(comp.getClass());
+//				System.out.println(((ParticleProbe) probe).getPhaseCoordinates());
+			}
+            
         }
     }
     

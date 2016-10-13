@@ -49,7 +49,7 @@ public class RpcServer {
         SERVER_SOCKET = new ServerSocket( 0 );
         REMOTE_SOCKETS = new HashSet<Socket>();
 
-//		System.out.println( "Listening on: " + getHost() + ":" + getPort() );
+		System.out.println( "Listening on: " + getHost() + ":" + getPort() );
     }
     
     

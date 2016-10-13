@@ -1,0 +1,186 @@
+package kritha.virtualmag;
+
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+
+import xal.ca.Channel;
+import xal.ca.ChannelFactory;
+import xal.ca.ChannelRecord;
+import xal.ca.ConnectionException;
+import xal.ca.GetException;
+import xal.ca.IEventSinkValue;
+import xal.ca.Monitor;
+import xal.ca.MonitorException;
+import xal.plugin.jca.JcaChannelFactory;
+
+import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.math.BigDecimal;
+
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+
+
+public class Main extends JPanel {
+
+	private  double curr=10.0;
+	private static VirtualMag virtualMag=new VirtualMag();
+	private static final long serialVersionUID = 1L;
+	final JTextField tf1=new JTextField();
+	final JTextField tf2=new JTextField();
+	final JTextField tf3=new JTextField();
+	final JTextField tf4=new JTextField();
+	private static Channel BPMx=null;
+	private static Channel BPMy=null;
+	static Main main=new Main();
+	/**
+	   * Implementation of MonitorListener class
+	   */
+	  private class SJCAMonitorListener implements IEventSinkValue {
+		@Override
+		public void eventValue(ChannelRecord record, Channel chan) {
+			// TODO Auto-generated method stub
+			onValueChanged( record,  chan);
+		}
+	  };
+	  
+	public Main() {
+		// TODO Auto-generated constructor stub
+		setLayout(null);
+		JLabel label=new JLabel("请输入电流值(默认10A):");
+		label.setFont(new Font("Serif",Font.PLAIN,18));
+		label.setOpaque(true);
+		label.setBounds(50, 30,250, 25);
+		add(label);
+		  
+		tf1.setFont(new Font("Serif",Font.PLAIN,18));
+		tf1.setOpaque(true);
+		tf1.setBounds(260,30,100,30);
+		tf1.setText("10.0");
+		add(tf1);
+
+		
+		JLabel label2=new JLabel("二极铁磁场(默认0.3208T):");
+		label2.setFont(new Font("Serif",Font.PLAIN,18));
+		label2.setOpaque(true);
+		label2.setBounds(50,70,250,25);
+		add(label2);
+		  
+		tf2.setFont(new Font("Serif",Font.PLAIN,18));
+		tf2.setOpaque(true);
+		tf2.setBounds(260,70,100,30);
+		tf2.setText("0.3208"+"T");
+		tf2.setEditable(false);
+		add(tf2);
+		
+		JLabel label3=new JLabel("BPM5 水平读数:");
+		label3.setFont(new Font("Serif",Font.PLAIN,18));
+		label3.setOpaque(true);
+		label3.setBounds(50,110,250,25);
+		add(label3);
+		  
+		tf3.setFont(new Font("Serif",Font.PLAIN,18));
+		tf3.setOpaque(true);
+		tf3.setBounds(200,110,100,30);
+		tf3.setText("0.0"+"mm");
+		tf3.setEditable(false);
+		add(tf3);
+		
+		JLabel label4=new JLabel("BPM5 垂直读数:");
+		label4.setFont(new Font("Serif",Font.PLAIN,18));
+		label4.setOpaque(true);
+		label4.setBounds(50,150,250,25);
+		add(label4);
+		  
+		tf4.setFont(new Font("Serif",Font.PLAIN,18));
+		tf4.setOpaque(true);
+		tf4.setBounds(200,150,100,30);
+		tf4.setText("0.0"+"mm");
+		tf4.setEditable(false);
+		add(tf4);
+		
+		tf1.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				// TODO Auto-generated method stub
+				if(arg0.getSource()==tf1)
+				{
+					String current = tf1.getText().trim();
+					System.out.println("text changed："+current); 
+					if (isNum(current)) {
+						curr=Double.parseDouble(current);
+						virtualMag.setCurrentForMag("MEBT_Mag:DH01", curr);
+						tf2.setText(Double.toString(virtualMag.getCurrentForMag("MEBT_Mag:DH01")));
+						virtualMag.getFieldsForMags();
+					}else {
+					     JOptionPane.showMessageDialog(null, "请输入合法的数字");
+					     return;
+					}
+				}
+			}
+		});
+	}
+	
+	  /**
+	   * Monitor callback
+	   */
+    public void onValueChanged(ChannelRecord record, Channel chan) {
+		// TODO Auto-generated method stub
+		if(chan.getId().equals("MEBT_Diag:BPM05:xAvg")){
+			try {
+				tf3.setText(Double.toString(BPMx.getValDbl()));
+			} catch (ConnectionException | GetException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}else if (chan.getId().equals("MEBT_Diag:BPM05:yAvg")) {
+			try {
+				tf4.setText(Double.toString(BPMy.getValDbl()));
+			} catch (ConnectionException | GetException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	public static boolean isNum(String str) {
+    	  
+        try {
+            new BigDecimal(str);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		virtualMag.setCurrentForMag("MEBT_Mag:DH01", 10.0);
+		JFrame frame=new JFrame();
+		frame.setTitle("Dipole 01 磁铁控制软件");
+		JPanel p=   new Main();
+		Main.SJCAMonitorListener bpMonitorListener = main.new SJCAMonitorListener();
+		frame.add(p);
+		frame.setVisible(true);
+		frame.setSize(500, 300);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		virtualMag.putSetPVs();
+		virtualMag.getFieldsForMags();
+		ChannelFactory channelFactory=new JcaChannelFactory();
+		if(channelFactory.init()){
+			BPMx=channelFactory.getChannel("MEBT_Diag:BPM05:xAvg");
+			BPMy=channelFactory.getChannel("MEBT_Diag:BPM05:yAvg");
+			if(BPMx.connectAndWait()&&BPMy.connectAndWait()){
+				try {
+					BPMx.addMonitorValue(bpMonitorListener, Monitor.VALUE|Monitor.LOG| Monitor.ALARM);
+					BPMy.addMonitorValue(bpMonitorListener, Monitor.VALUE|Monitor.LOG| Monitor.ALARM);
+				} catch (ConnectionException | MonitorException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+			}
+		}
+	}
+
+}

@@ -18,6 +18,7 @@ import xal.tools.data.GenericRecord;
 import xal.model.IElement;
 import xal.model.IProbe;
 import xal.model.ModelException;
+import xal.model.elem.IdealMagSectorDipole2;
 import xal.model.probe.ParticleProbe;
 
 
@@ -229,15 +230,17 @@ public class ParticleTracker extends Tracker {
         
         // Properties of the element
         PhaseMap  mapPhi = elem.transferMap(probe, dblLen);
-        
+//        System.out.println(mapPhi);
         // Advance state vector
         PhaseVector  z0 = probe.getPhaseCoordinates();
-        PhaseVector  z1 = mapPhi.apply(z0);
-        
+        PhaseVector  z1 = mapPhi.apply(z0);     
         probe.setPhaseCoordinates(z1);
         
         // Advance response matrix
         PhaseMatrix matPhi = mapPhi.getFirstOrder();
+//        if(elem instanceof IdealMagSectorDipole2){
+//        	System.out.println("sector dipole's transfer map: "+matPhi);
+//        }
         PhaseMatrix R0 = probe.getResponseMatrix();
         PhaseMatrix R1 = matPhi.times( R0 );
         

@@ -495,7 +495,7 @@ public class ScanController1D {
 
     controllerPanel.add(inner_panel, BorderLayout.WEST);
 
-    setFontForAll(new Font("Monospaced", Font.PLAIN, 10));
+    setFontForAll(new Font("Monospaced", Font.PLAIN, 14));//chang from 10 t0 14 20160205
     controllerPanel.setBackground(controllerPanel.getBackground().darker());
   }
 
@@ -1832,19 +1832,26 @@ public class ScanController1D {
         }
       });
 
+    System.out.println(iRange.getScanVariable());
+    System.out.println(iRange.getMeasuredValuesV());
     //start scan
     try {
       Thread.sleep(2000);
     } catch (InterruptedException exc) {}
 
     iRange.startScan();
-
+    
+    System.out.println(iRange.getScanVariable());
+    System.out.println(iRange.getMeasuredValuesV());
     //stop scan temporary
     try {
       Thread.sleep(10000);
     } catch (InterruptedException exc) {}
 
     iRange.stopScan();
+    
+    System.out.println(iRange.getScanVariable());
+    System.out.println(iRange.getMeasuredValuesV());
 
     //resume scan
     try {
@@ -1852,6 +1859,9 @@ public class ScanController1D {
     } catch (InterruptedException exc) {}
 
     iRange.resumeScan();
+    
+    System.out.println(iRange.getScanVariable());
+    System.out.println(iRange.getMeasuredValuesV());
 
   }
 }

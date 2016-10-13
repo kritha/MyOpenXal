@@ -142,8 +142,8 @@ public abstract class MagnetPowerSupply implements DataListener {
      */
     public Channel getAndConnectChannel( final String handle ) throws NoSuchChannelException, ConnectionException {
         Channel channel = getChannel( handle );
-        channel.connectAndWait();
-        
+        boolean conntected = channel.connectAndWait();
+        System.out.println(conntected);
         return channel;
     }
     
